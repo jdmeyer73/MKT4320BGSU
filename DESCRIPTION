@@ -1,7 +1,7 @@
 Package: MKT4320BGSU
 Type: Package
 Title: Functions and Data for MKT 4320
-Version: 0.1.0
+Version: 0.1.1
 Author: Jeffrey Meyer
 Maintainer: Jeffrey Meyer <jdmeyer@bgsu.edu>
 Description: Contains user-defined functions and data for use in BGSU's

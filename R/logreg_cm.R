@@ -1,4 +1,4 @@
-#' @title Classification Matrix and Statistics
+#' @title Classification Matrix and Statistics for Binary Logistic Regression
 #' @description This function accepts a binary logistic regression - glm() -
 #'    object and returns the classification matrix and associated statistics.
 #' @details

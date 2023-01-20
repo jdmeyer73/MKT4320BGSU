@@ -2,7 +2,7 @@
 % Please edit documentation in R/logreg_cm.R
 \name{logreg_cm}
 \alias{logreg_cm}
-\title{Classification Matrix and Statistics}
+\title{Classification Matrix and Statistics for Binary Logistic Regression}
 \usage{
 logreg_cm(MOD, DATA, POSITIVE, CUTOFF = 0.5)
 }

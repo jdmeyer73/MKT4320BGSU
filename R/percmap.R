@@ -12,9 +12,11 @@
 #' @param group Name of the grouping variable. Must be in quotations. 
 #' @param pref Name of the preference variable. Must be in quotations. Can be 
 #'     excluded if no preference variable exists.
-#' @return 
+#' @return
+#' \itemize{ 
 #'   \item If a \code{pref} variable is not included, returns a perceptual map
 #'   \item If a \code{pref} variable is included, returns a joint space map
+#' }
 #' @examples
 #' #Perceptual map
 #' pmdata <- greekbrands %>%

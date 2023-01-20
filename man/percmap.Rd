@@ -16,8 +16,10 @@ principal components analysis. Can include a preference variable.}
 excluded if no preference variable exists.}
 }
 \value{
-\item If a \code{pref} variable is not included, returns a perceptual map
+\itemize{ 
+  \item If a \code{pref} variable is not included, returns a perceptual map
   \item If a \code{pref} variable is included, returns a joint space map
+}
 }
 \description{
 This function products percpeptual or joint spaced maps based
