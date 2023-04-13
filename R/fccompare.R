@@ -1,3 +1,34 @@
+#' @title Forecast Compare
+#' @description This function compares forecasting models previous ran
+#' @details
+#' REQUIRED PACKAGES:
+#' \itemize{
+#'   \item purrr
+#'   \item dplyr
+#' }
+#' @param results A list of the stored methods results created with the 
+#'    \code{list} function
+#' @param models A vector of the models you want to compare. The names of the
+#'    models need to be in quotations and need to match the names used is the
+#'    stored methods results. 
+#' @return
+#' \itemize{ 
+#'   \item \code{$acc} Table of accuracy measures
+#'   \item \code{$fcresplot} Plot of holdout period residuals
+#' }
+#' @examples
+#' # Create stored methods
+#' naive <- naivefc(msales, "t", "sales", "ym", 12)
+#' smooth <- smoothfc(msales, "t", "sales", "ym", 12)
+#' linreg <- linregfc(msales, "t", "sales", "ym", 12)
+#' 
+#' # Create list object with results and vector with method names
+#' results <- list(naive, smooth, linreg)
+#' models <- c("Naive", "Mov.Ave", "Lin.Reg.Trend")
+#' 
+#' # Compare models
+#' fccompare(results, models)
+
 fccompare <- function(results, models) {
    require(dplyr)
    require(purrr)

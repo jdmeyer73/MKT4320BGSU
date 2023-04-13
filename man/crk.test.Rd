@@ -8,7 +8,7 @@
 \itemize{
    \item \code{crk.train} contains data for 590 choice occasions in long 
        format (1770 rows and 8 columns)
-   \item \code{test.yog} contains data for 194 choice occasions in long
+   \item \code{crk.test} contains data for 194 choice occasions in long
        format (582 rows and 8 columns)
 }
 \describe{
