@@ -1,5 +1,5 @@
 #' @title Easy Perceptual and Joint Space Maps from PCA
-#' @description This function products percpeptual or joint spaced maps based
+#' @description This function produces perceptual or joint spaced maps based
 #'     on the first two principal components of a PCA
 #' @details
 #' REQUIRED PACKAGES:

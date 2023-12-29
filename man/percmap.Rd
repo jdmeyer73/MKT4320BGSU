@@ -22,7 +22,7 @@ excluded if no preference variable exists.}
 }
 }
 \description{
-This function products percpeptual or joint spaced maps based
+This function produces perceptual or joint spaced maps based
     on the first two principal components of a PCA
 }
 \details{
