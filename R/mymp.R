@@ -322,7 +322,7 @@ mymp <- function(model, focal, int=NULL)
    else if (plot.type=="cat.cont") {
       fterm <- focal
       #val <- myval(i.data, ilevels=4)
-      iterm <- paste0(int, " [val]")
+      iterm <- paste0(int, " [i.val]")
       ptable <- ggeffect(model, terms=c(fterm, iterm))
       glabel <- get_legend_title(ptable)
       appender <- function(string, prefix=glabel) paste0(prefix,"=", string)
