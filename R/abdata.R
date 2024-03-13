@@ -1,0 +1,24 @@
+#' A/B Testing Data
+#'
+#' Results of an A/B test for an online shopping site.
+#'
+#' @usage data(ab.data)
+#' @format
+#' A data frame with 5000 rows and 11 columns:
+#' \describe{
+#'   \item{\code{buy}}{1 if customer bought after experiment, 0 otherwise}
+#'   \item{\code{rev}}{Revenue from customers after experiment}
+#'   \item{\code{coupon}}{1 if customer received promotion coupon, 0 otherwise}
+#'   \item{\code{channel}}{Original channel of acquisition (Google, Facebook,
+#'        Instagram, Other)}
+#'   \item{\code{prevnum}}{Number of previous purchases}
+#'   \item{\code{prevrev}}{Revenue from previous purchase}
+#'   \item{\code{recency}}{Number of weeks since last visit prior to experiment}
+#'   \item{\code{prevtime}}{Minutes spent browsing site during last visit}
+#'   \item{\code{abandon}}{1 if customer had item in cart but didn't purchase
+#'        during previous visit, 0 otherwise}
+#'   \item{\code{minority}}{1 if customer is a minority, 0 otherwise}
+#'   \item{\code{female}}{1 if customer is a female, 0 otherwise}
+#' }
+#' @source Unknown
+"ab.data"
