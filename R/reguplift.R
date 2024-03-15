@@ -192,10 +192,9 @@ reguplift <- function (model, treatment, pdata=NULL,
    }
    
    model.formula <- model$call$formula
-   model.formula <- paste(model.formula[2], model.formula[1], 
-                          model.formula[3], sep=" ")
-   model.formula <- gsub(outcome, "outcome", model.formula)
-   model.formula <- gsub(treatment,"treat", model.formula)
+   model.formula <- paste(gsub(outcome, "outcome", model.formula[2]), 
+                          model.formula[1], 
+                          gsub(treatment,"treat",model.formula[3]), sep=" ")
    model.formula <- gsub("treat \\*|\\* treat|treat \\+", "", model.formula)
    model.formula <- gsub(" ","", model.formula)
    
