@@ -203,56 +203,56 @@ reguplift <- function (model, treatment, pdata=NULL,
    data.1 <- data[data$treat == 1,]
    
    # Check Interactions
-   
-   if (int=="Y" & model$call[1]=="glm()") {
-      mf1 <- "outcome~"
-      mf2 <- strsplit(model.formula, split="~")[[1]][2]
-      params <- strsplit(mf2,split="\\+")[[1]]
-      sig.ints <- data.frame(c1=double(), c2=double(),
-                             c3=double(), c4=double(),
-                             c5=character())
-      for (var in params) {
-         mf <- paste0(mf1,var,"*(",mf2,")")
-         m0 <- data.frame(summary(glm(mf, data=data.0, family=binomial(link="logit")))$coefficients)
-         m0$model <- "Control"
-         sig.ints <- rbind(sig.ints,
-                           m0[m0[,4]<0.1 & grepl(":", rownames(m0)),])
-         m1 <- data.frame(summary(glm(mf, data=data.1, family=binomial(link="logit")))$coefficients)
-         m1$model <- "Treat"
-         sig.ints <- rbind(sig.ints,
-                           m1[m1[,4]<0.1 & grepl(":", rownames(m1)),])
-      }
-      sig.ints[,4] <- round(sig.ints[,4],3)
-      sig.ints <- sig.ints[,4:5]
-      colnames(sig.ints) <- c("p","model")
-      sig.ints$int <- rownames(sig.ints)
-      sig.ints <- reshape(sig.ints, idvar="int", timevar="model", direction="wide")
-   }
-   if (int=="Y" & model$call[1]=="lm()") {
-      mf1 <- "outcome~"
-      mf2 <- strsplit(model.formula, split="~")[[1]][2]
-      params <- strsplit(mf2,split="\\+")[[1]]
-      sig.ints <- data.frame(c1=double(), c2=double(),
-                             c3=double(), c4=double(),
-                             c5=character())
-      for (var in params) {
-         mf <- paste0(mf1,var,"*(",mf2,")")
-         m0 <- data.frame(summary(lm(mf, data=data.0))$coefficients)
-         m0$model <- "Control"
-         sig.ints <- rbind(sig.ints,
-                           m0[m0[,4]<0.1 & grepl(":", rownames(m0)),])
-         m1 <- data.frame(summary(lm(mf, data=data.1))$coefficients)
-         m1$model <- "Treat"
-         sig.ints <- rbind(sig.ints,
-                           m1[m1[,4]<0.1 & grepl(":", rownames(m1)),])
-      }
-      sig.ints[,4] <- round(sig.ints[,4],3)
-      sig.ints <- sig.ints[,4:5]
-      colnames(sig.ints) <- c("p","model")
-      sig.ints$int <- rownames(sig.ints)
-      sig.ints <- reshape(sig.ints, idvar="int", timevar="model", direction="wide")
-   }
    if (int=="Y") {
+      mf1 <- "outcome~"
+      mf2 <- strsplit(model.formula, split = "~")[[1]][2]
+      params <- strsplit(mf2, split = "\\+")[[1]]
+      sig.ints <- NULL
+      sig.ints <- data.frame(c1 = double(), c2 = double(), 
+                             c3 = double(), c4 = double(), c5 = character(),
+                             c6=(character()))
+      for (var in params) {
+         mf <- paste0(mf1,var,"*(",mf2,")")
+         if (model$call[1]=="glm()") {
+            m0 <- data.frame(summary(glm(mf, data = data.0, 
+                                         family = binomial(link = "logit")))$coefficients)
+            m1 <- data.frame(summary(glm(mf, data = data.1, 
+                                         family = binomial(link = "logit")))$coefficients)
+         }
+         else if (model$call[1]=="lm()") {
+            m0 <- data.frame(summary(lm(mf, data=data.0))$coefficients)
+            m1 <- data.frame(summary(lm(mf, data=data.1))$coefficients)
+         }
+         m0$model <- "Control"
+         m0 <- m0[m0[, 4] < 0.1 & grepl(":", rownames(m0)), ]
+         m0$int <- rownames(m0)
+         m1$model <- "Treat"
+         m1 <- m1[m1[, 4] < 0.1 & grepl(":", rownames(m1)), ]
+         m1$int <- rownames(m1)
+         sig.ints <- rbind(sig.ints, 
+                           m0[m0[, 4] < 0.1 & grepl(":",
+                                                    rownames(m0)), ])
+         sig.ints <- rbind(sig.ints, 
+                           m1[m1[, 4] < 0.1 & grepl(":",
+                                                    rownames(m1)), ])
+      }
+      sig.ints[, 4] <- round(sig.ints[, 4], 3)
+      sig.ints <- sig.ints[, 4:6]
+      sig.ints <- within(sig.ints, 
+                         var1<-data.frame(do.call('rbind', 
+                                                  strsplit(as.character(int), ':',
+                                                           fixed=TRUE))))
+      sig.ints <- within(sig.ints, 
+                         int <- ifelse(var1$X1<var1$X2,
+                                       paste0(var1$X1,":",var1$X2),
+                                       paste0(var1$X2,":",var1$X1)))
+      sig.ints <- sig.ints[,1:3]
+      sig.ints <- aggregate(sig.ints[,1], 
+                            list(sig.ints[,3], sig.ints[,2]), FUN=min)
+      colnames(sig.ints) <- c("int", "model", "p")
+      sig.ints <- reshape(sig.ints, idvar = "int", timevar = "model", 
+                          direction = "wide")
+      sig.ints <- sig.ints[order(sig.ints$int),]
       sig.ints <- flextable(sig.ints)
       sig.ints <- set_header_labels(sig.ints, int="Interaction", 
                                     p.Control="Control",
@@ -265,15 +265,16 @@ reguplift <- function (model, treatment, pdata=NULL,
       sig.ints <- padding(sig.ints, padding.top=1, padding.bottom = 1, 
                           part="body") 
       footer2line <- paste0("Outcome = ", outcome)
-      footer3line <- paste0("Control: ",treatment," = 0; Treat: ", treatment," = 1")
+      footer3line <- paste0("Control: ",treatment," = 0")
+      footer4line <- paste0("Treat: ", treatment," = 1")
       sig.ints <- add_footer_lines(sig.ints,
                                    as_paragraph(as_sup("1 "),
                                                 "Values are p-values for interaction\n",
                                                 as_sup("2 "),footer2line,"\n",
-                                                as_sup("3 "),footer3line))
+                                                as_sup("3 "),footer3line,"\n",
+                                                as_sup("4 "),fo))
       sig.ints <- padding(sig.ints, padding.top=1, padding.bottom = 1, 
                           part="body") 
-      
    }
    
    
