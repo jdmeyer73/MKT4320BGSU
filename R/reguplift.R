@@ -272,7 +272,7 @@ reguplift <- function (model, treatment, pdata=NULL,
                                                 "Values are p-values for interaction\n",
                                                 as_sup("2 "),footer2line,"\n",
                                                 as_sup("3 "),footer3line,"\n",
-                                                as_sup("4 "),fo))
+                                                as_sup("4 "),footer4line))
       sig.ints <- padding(sig.ints, padding.top=1, padding.bottom = 1, 
                           part="body") 
    }
