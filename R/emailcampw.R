@@ -1,23 +1,25 @@
-#' A/B Testing Data
+#' Email Campaign A/B Testing Data (Women's Merchandise)
 #'
-#' Results of an A/B test an email campaign for women's merchandise.
+#' Results of an A/B test of an email marketing campaign for women's merchandise.
 #'
-#' @usage data(email.camp.w)
-#' @format
-#' A data frame with 10000 rows and 9 columns:
+#' @docType data
+#' @format A data frame with 10,000 rows and 9 variables:
 #' \describe{
-#'   \item{\code{visit}}{1 if customer visited site within two weeks after 
-#'         experiment, 0 otherwise}
-#'   \item{\code{spend}}{Amount spent on site within two weeks after experiment}
-#'   \item{\code{recency}}{Number of months since last }
-#'   \item{\code{history}}{Amount spent on site in past year}
-#'   \item{\code{womens}}{1 if customer purchased womens merchandise in the past
-#'         year, 0 otherwise}
-#'   \item{\code{zip}}{Factor variable indicating if customer lives in a Rural,
-#'         Suburban, or Urban area}
-#'   \item{\code{newbie}}{1 if customer is new to site in past year, 0 otherwise}
-#'   \item{\code{channel}}{Factor variable indicating channel customer purchased
-#'         from in past year, Phone, Web, or Multichannel (i.e., both)}
+#'   \item{visit}{Integer. Site visit within two weeks after the experiment
+#'     (\code{1 = yes}, \code{0 = no}).}
+#'   \item{spend}{Numeric. Amount spent on the site within two weeks after the experiment.}
+#'   \item{recency}{Numeric. Months since last purchase prior to the experiment.}
+#'   \item{history}{Numeric. Amount spent on the site in the past year.}
+#'   \item{womens}{Integer. Purchased women's merchandise in the past year
+#'     (\code{1 = yes}, \code{0 = no}).}
+#'   \item{zip}{Factor. Residential area type
+#'     (\code{Rural}, \code{Suburban}, \code{Urban}).}
+#'   \item{newbie}{Integer. New customer in the past year
+#'     (\code{1 = yes}, \code{0 = no}).}
+#'   \item{channel}{Factor. Prior purchase channel
+#'     (\code{Phone}, \code{Web}, \code{Multichannel}).}
+#'   \item{promotion}{Integer. Received the promotion
+#'     (\code{1 = yes}, \code{0 = no}).}
 #' }
-#' @source https://blog.minethatdata.com/2008/03/minethatdata-e-mail-analytics-and-data.html
+#' @source MineThatData blog (2008).
 "email.camp.w"

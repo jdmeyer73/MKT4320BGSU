@@ -1,38 +1,58 @@
-#' @title Easy Standard Mutlinomial Logistic Regression Results
-#' @description This takes a multinomial logistic regression model result from
-#'     the \code{multinom} function of the \code{nnet} package and returns
-#'     model fit and odds-ratio estimates
+#' @title Easy Standard Multinomial Logistic Regression Results (Deprecated)
+#'
+#' @description
+#' Deprecated. Use \code{\link{eval_std_mnl}} instead.
+#'
 #' @details
-#' REQUIRED PACKAGES:
+#' This function is a thin wrapper around \code{\link{eval_std_mnl}} kept for
+#' backward compatibility. It prints model-fit statistics and the coefficient
+#' table, similar to the legacy output.
+#'
+#' Migration:
 #' \itemize{
-#'   \item broom
+#'   \item \code{stmnl(model)} \eqn{\rightarrow} \code{eval_std_mnl(model)}
 #' }
-#' @param model A \code{multinom} object from the \code{nnet} package
+#'
+#' @param model A fitted \code{nnet::multinom} model.
+#'
+#' @return Invisibly returns the \code{eval_std_mnl} result object.
+#'
 #' @examples
+#' \dontrun{
+#' # model <- nnet::multinom(y ~ x1 + x2, data = mydata, model = TRUE, trace = FALSE)
 #' stmnl(model)
-
+#' }
+#'
+#' @export
 stmnl <- function(model) {
-   require(broom)
-   null <- multinom(eval(model$call$formula[[2]])~1, data=eval(model$call$data),
-                    trace=FALSE)
-   modout <- as.data.frame(tidy(model, exponentiate=TRUE))
-   modout[,3:6] <- round(modout[,3:6],4)
-   lr.stat <- anova(null,model)$`LR stat.`[2]
-   lr.pval <- anova(null,model)$`Pr(Chi)`[2]
-   if (lr.pval<.00005) {
-      likrat <- paste0("LR chi2 (",
-                    anova(null,model)$`   Df`[2],
-                    ") = ", round(lr.stat,4), "; p < 0.0001")
+   .Deprecated("eval_std_mnl", package = "MKT4320BGSU")
+   
+   res <- eval_std_mnl(model, exp = TRUE, ft = FALSE)
+   
+   # Preserve legacy behavior: print fit lines + coefficient table
+   # (print method shows classification too; we avoid that here)
+   p_txt <- if (is.na(res$fit$p_value)) {
+      "NA"
+   } else if (res$fit$p_value < 1e-4) {
+      "< 0.0001"
    } else {
-      likrat <- paste0("LR chi2 (",
-                       anova(null,model)$`   Df`[2],
-                       ") = ", round(lr.stat,4), "; p = ", 
-                       format(round(lr.pval,4), nsmall=4))
+      format(round(res$fit$p_value, 4), nsmall = 4)
    }
-   mcf.r2 <- (null$deviance-model$deviance)/null$deviance
-   mcfad <- paste0("McFadden's Pseudo R-square = ", 
-                   format(round(mcf.r2,4),nsmall=4))
-   assessout <- paste(likrat,mcfad,"\n",sep="\n")
-   cat(assessout)                   
-   print(modout, row.names=FALSE)
+   
+   cat(
+      "LR chi2 (", res$fit$df, ") = ", format(res$fit$LR_Chi2, nsmall = 4),
+      "; p ", p_txt, "\n",
+      sep = ""
+   )
+   cat(
+      "McFadden's Pseudo R-square = ",
+      format(res$fit$McFadden_R2, nsmall = 4),
+      "\n\n",
+      sep = ""
+   )
+   
+   # Match old stmnl(): print table only, no row names
+   print(res$coef_table_df, row.names = FALSE)
+   
+   invisible(res)
 }

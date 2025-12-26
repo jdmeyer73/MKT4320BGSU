@@ -2,7 +2,7 @@
 % Please edit documentation in R/liftplot.R
 \name{liftplot}
 \alias{liftplot}
-\title{Easy Lift Plot for Uplift Modeling}
+\title{Easy Lift Plot for Uplift Modeling (Deprecated)}
 \usage{
 liftplot(
   data,
@@ -13,45 +13,45 @@ liftplot(
 )
 }
 \arguments{
-\item{data}{The name of the data frame with the results of an uplift modeling
-analysis.}
+\item{data}{Data frame containing uplift results, including a numeric column
+named \code{lift}.}
 
-\item{var}{The variable name for which the error-bars should be created. Must 
-be in quotations. Default is \code{"NULL"} for a histogram.}
+\item{var}{Optional character string; covariate name for a single lift plot.
+If \code{NULL}, a histogram is returned.}
 
-\item{byvar}{The variable that identifies second variable if side-by-side 
-error-bar plots are desired. Must be in quotations. Default is
- \code{"NULL"}.}
+\item{byvar}{Optional character string; second covariate name to create a
+single interaction-style plot with \code{var}.}
 
-\item{ar}{The aspect ratio for the plot. Used if a certain aspect ratio is
-desired for presentation purposes. Default is \code{"NULL"}.}
+\item{ar}{Optional aspect ratio passed to \code{theme(aspect.ratio = ar)}.}
 
-\item{ci}{The type of error-bar desired. Ignored if \code{"var"} is null.
-\itemize{
-\item \code{"0"} for error-bars to represent 1 standard deviation
-\item \code{"c(0.90, 0.95, 0.975, 0.99)"} for error-bars to represent the 
-    desired confidence interval.
-}}
+\item{ci}{Error-bar style: use \code{0} for \eqn{\pm 1} SD, or one of
+\code{c(0.90, 0.95, 0.975, 0.99)} for normal-approximation confidence
+intervals. Default is \code{c(0.90, 0.95, 0.975, 0.99, 0)} (legacy).}
 }
 \value{
-A ggplot object
+A single \code{ggplot} object.
 }
 \description{
-This function creates a lift plot following uplift modeling. It
-    can create a histogram (if \code{"var"} is null) or an error-bar plot. 
-    For continuous variables, it will create an error-bar for the quintile 
-    values of the variable. For factor variables, it will create an error-bar 
-    for each level of the factor. It can also create side-by-side error-bar 
-    plots for two variables simultaneously by using the \code{"byvar"} option.
+Deprecated. Use \code{\link{easy_liftplots}} instead.
 }
 \details{
-REQUIRED PACKAGES:
+This function is kept for backward compatibility. It returns a single plot:
+a histogram of predicted lift (when \code{var} is \code{NULL}), a single
+lift-by-covariate plot (when \code{var} is provided), or a single
+interaction-style plot (when both \code{var} and \code{byvar} are provided).
+
+Migration:
 \itemize{
-  \item \code{ggplot1}
+\item \code{liftplot(df)} \eqn{\rightarrow} \code{easy_liftplots(x)$hist}
+\item \code{liftplot(df, "recency")} \eqn{\rightarrow} \code{easy_liftplots(x, vars="recency")$plots_main[["recency"]]}
+\item \code{liftplot(df, "recency", "history")} \eqn{\rightarrow} \code{easy_liftplots(x, pairs=list(c("recency","history")))$plots_pairs[[1]]}
 }
 }
 \examples{
-liftplot(results.visit.w$all, ar=1)
-liftplot(results.visit.w$all, "recency", ar=1, ci=0.95)
-liftplot(results.visit.w$all, "recency", "history", ar=1, ci=0.95)
+\dontrun{
+liftplot(results$all)
+liftplot(results$all, "recency", ar = 1, ci = 0.95)
+liftplot(results$all, "recency", "history", ar = 1, ci = 0.95)
+}
+
 }

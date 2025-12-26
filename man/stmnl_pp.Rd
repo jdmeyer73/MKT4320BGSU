@@ -2,39 +2,44 @@
 % Please edit documentation in R/stmnl_pp.R
 \name{stmnl_pp}
 \alias{stmnl_pp}
-\title{Average Predicted Probabilities for Standard MNL}
+\title{Average Predicted Probabilities for Standard MNL (Deprecated)}
 \usage{
-stmnl_pp(model, focal, xlab = NULL)
+stmnl_pp(model, focal, xlab = NULL, ft_table = FALSE)
 }
 \arguments{
-\item{model}{A \code{multinom} object from the \code{nnet} package}
+\item{model}{A fitted \code{nnet::multinom} model.}
 
-\item{focal}{The name of the variable (in quotes) for which predicted 
-probabilities are wanted}
+\item{focal}{Character string; name of the focal predictor variable.}
 
-\item{xlab}{The desired x-axis label for the plot, in quotes; optional}
+\item{xlab}{Optional character string; x-axis label used in the plot.}
+
+\item{ft_table}{Logical; if \code{TRUE}, return the table as a \code{flextable}.}
 }
 \value{
-Predicted probabilities table ($table) and ggplot ($plot). Can be
-    saved as an object.
+A list with:
+\itemize{
+\item \code{$table}: data frame or flextable of predicted probabilities
+\item \code{$plot}: ggplot object
+}
 }
 \description{
-This function accepts a multinomial logistic regression object
-   from the \code{multinom} function of the \code{nnet} package and returns 
-   a table and plot of average predicted probabilities.
+Deprecated. Use \code{\link{pp_std_mnl}} instead.
 }
 \details{
-For continuous focal variables, the table produced uses three
-    levels to calculate predicted probabilities: -1 SD, Mean, +1 SD \cr
-    \cr
-REQUIRED PACKAGES:
+This function is a thin wrapper around \code{\link{pp_std_mnl}} kept for
+backward compatibility.
+
+Migration:
 \itemize{
-  \item tidyr
-  \item effects
-  \item dplyr
-  \item ggplot2
+\item \code{stmnl_pp(model, focal, xlab)} \eqn{\rightarrow}
+\code{pp_std_mnl(model, focal = focal, xlab = xlab)}
 }
 }
 \examples{
-stmnl_pp(model, "Age", "Age in Years")
+\dontrun{
+out <- stmnl_pp(model, focal = "age", xlab = "Age in Years")
+out$table
+out$plot
+}
+
 }

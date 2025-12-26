@@ -2,24 +2,37 @@
 % Please edit documentation in R/stmnl_cm.R
 \name{stmnl_cm}
 \alias{stmnl_cm}
-\title{Classification Matrix and Statistics for Standard MNL}
+\title{Classification Matrix and Statistics for Standard MNL (Deprecated)}
 \usage{
 stmnl_cm(model, data)
 }
 \arguments{
-\item{model}{A \code{multinom} object from the \code{nnet} package}
+\item{model}{A fitted \code{nnet::multinom} model.}
 
-\item{data}{The name of the data frame for which the classification matrix
-should be produced (i.e., training data, holdout data, etc.)}
+\item{data}{Data frame for which the classification matrix should be produced
+(e.g., training data, holdout data).}
 }
 \value{
-Classification matrix and statistics
+A classification matrix (as a numeric data frame with margins),
+matching the legacy return type.
 }
 \description{
-This function accepts a multinomial logistic regression object
-   from the \code{multinom} function of the \code{nnet} package and returns 
-   the classification matrix and associated statistics.
+Deprecated. Use \code{\link{eval_std_mnl}} instead.
+}
+\details{
+This function is a thin wrapper around \code{\link{eval_std_mnl}} kept for
+backward compatibility. It computes and prints a classification matrix and
+associated diagnostics for the supplied dataset, similar to the legacy output.
+
+Migration:
+\itemize{
+\item \code{stmnl_cm(model, data)} \eqn{\rightarrow} \code{eval_std_mnl(model, newdata = data)}
+}
 }
 \examples{
-stmnl_cm(model, train)
+\dontrun{
+# stmnl_cm(model, train)
+# stmnl_cm(model, test)
+}
+
 }

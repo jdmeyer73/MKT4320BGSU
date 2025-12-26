@@ -7,41 +7,40 @@
 cademo(formula, data, vars)
 }
 \arguments{
-\item{formula}{An object with a saved formula used in a previous traditional
-conjoint analysis that was analyzed with the \code{tradca()} function}
+\item{formula}{A model formula used in a previous traditional conjoint analysis
+analyzed with \code{tradca()}.}
 
-\item{data}{The name of the data frame with the case-level part-worths and
-importances that has been appended with demographic variables}
+\item{data}{A data frame containing case-level part-worth columns and appended
+demographics.}
 
-\item{vars}{A concantenated list of the demographics variables to analyze (
-in quotations)}
+\item{vars}{Character vector of demographic variable names to analyze.}
 }
 \value{
-Text correlation matrices and/or regression results
+Prints correlation matrices and/or regression coefficients to the console.
 }
 \description{
-This function produces correlation matrices and importance
-    regressions from a data frame of case-level part-worths/importances that
-    has been appended with demographics.
+Produce correlation matrices and simple importance regressions from a data
+frame of case-level part-worths/importances appended with demographics.
 }
 \details{
-To use this function, the \code{$casetable} from the call to the 
-    \code{tradca()} function must be appended with the demographic variables
-    for each case.  Refer to the course tutorial for code to accomplish
-    this.  \cr
-     \cr
-REQUIRED PACKAGES:
-\itemize{
-  \item Hmisc
-}
+This is a legacy helper used in older course materials. It is retained for
+backwards compatibility but is not used in current student workflows.
+
+Requires the \code{$casetable} from \code{tradca()} to be appended with case-level
+demographic variables.
 }
 \examples{
+\dontrun{
 caform <- value ~ airline + connect + price
-results <- tradca(formula = caform, data = airlineca, idvar="caseid")
-demos <- airlineca \%>\%   
-    group_by(caseid) \%>\% 
-    summarise(inc=first(inc), type=first(type)) \%>\% 
-    bind_cols(.,results$casetable[,2:ncol(results$casetable)])
+results <- tradca(formula = caform, data = airlineca, idvar = "caseid")
+
+demos <- airlineca \%>\%
+  group_by(caseid) \%>\%
+  summarise(inc = first(inc), type = first(type)) \%>\%
+  bind_cols(., results$casetable[, 2:ncol(results$casetable)])
 
 cademo(caform, demos, c("inc", "type"))
 }
+
+}
+\keyword{internal}

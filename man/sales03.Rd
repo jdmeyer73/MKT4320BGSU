@@ -3,23 +3,22 @@
 \docType{data}
 \name{sales03}
 \alias{sales03}
-\title{Durable Manufacturer Sales}
+\title{Durable Manufacturer Sales (2008–2017)}
 \format{
-\itemize{
-   \item \code{sales03} contains data for 120 months (120 rows and 2 columns)
-}
+A data frame with 120 rows and 2 variables:
 \describe{
-  \item{\code{t}}{Time period}
-  \item{\code{sales}}{Monthly sales}
+\item{t}{Integer. Sequential time period index (months).}
+\item{sales}{Numeric. Monthly sales in thousands of U.S. dollars.}
 }
 }
 \source{
-Unknown
+Unknown.
 }
 \usage{
-data(sales03)
+sales03
 }
 \description{
-Monthly sales data (in $000s) for a durable goods manufacturer from January 2008 through December 2017.
+Monthly sales data for a durable goods manufacturer from January 2008 through
+December 2017. Sales are measured in thousands of dollars.
 }
 \keyword{datasets}

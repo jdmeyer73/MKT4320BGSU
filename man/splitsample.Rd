@@ -2,37 +2,80 @@
 % Please edit documentation in R/splitsample.R
 \name{splitsample}
 \alias{splitsample}
-\title{Split Sample}
+\title{Split a Dataset into Training and Test Samples}
 \usage{
-splitsample(data, outcome, p = 0.75, seed = 4320)
+splitsample(
+  data,
+  outcome = NULL,
+  group = NULL,
+  choice = NULL,
+  alt = NULL,
+  p = 0.75,
+  seed = 4320
+)
 }
 \arguments{
-\item{data}{The data to be split.}
+\item{data}{A data frame to split.}
 
-\item{outcome}{Name of the outcome/dependent variable to be modeled.}
+\item{outcome}{Outcome variable used for stratification. Required when
+\code{group} is \code{NULL}. Optional when \code{group} is provided.}
 
-\item{p}{Percent of data to be in the training sample (remainder is in test).
-Defaults to 0.75 if excluded.}
+\item{group}{Optional grouping variable (e.g., choice situation id or respondent id).
+If provided, splitting is done at the group level.}
 
-\item{seed}{Seed value for random number generator.
-Defaults to 4320 if excluded.}
+\item{choice}{Optional 0/1 (or \code{TRUE}/\code{FALSE}) indicator for the chosen
+alternative. Used only when \code{group} is provided.}
+
+\item{alt}{Optional alternative label/ID. Used with \code{choice} to stratify
+at the group level.}
+
+\item{p}{Proportion of observations (or groups) to place in the training set.
+Must be strictly between 0 and 1. Default is 0.75.}
+
+\item{seed}{Random seed for reproducibility. Default is 4320.}
 }
 \value{
-\itemize{ 
-  \item \code{train} The training data; will be assigned to global environment.
-  \item \code{test} The testing data; will be assigned to the global environment.
-}
+An (invisible) list with elements \code{train} and \code{test}. When
+\code{group} is provided, also returns \code{train_groups} and
+\code{test_groups}.
 }
 \description{
-This function creates a training and test sample based on the
-   data and outcome variable provided
+Create training and test samples from a data frame. The function supports
+both a classic row-level split (stratified by a factor outcome) and a
+group-level split that keeps all rows from the same group together.
 }
 \details{
-REQUIRED PACKAGES:
+\strong{Row-level split (default):} If \code{group} is \code{NULL}, the function
+performs a row-level split and requires \code{outcome} to be a factor; the
+split is stratified on outcome levels using \code{caret::createDataPartition()}.
+
+\strong{Group-level split:} If \code{group} is provided, splitting is done at the
+group level so all rows belonging to the same group are assigned to the same
+partition (useful for long-format data such as alternative-specific choice
+data).
+
+Group-level stratification is attempted when:
 \itemize{
-  \item caret
+\item \code{choice} and \code{alt} are provided (stratify by chosen alternative), or
+\item \code{outcome} is provided and is a factor that is effectively constant within group.
 }
+If stratification labels are not available, groups are split by simple random
+sampling.
 }
 \examples{
-splitsample(directmktg, buy, 0.6, 123)
+\dontrun{
+# --- Classic row-level split (stratified by factor outcome) ---
+directmktg$buy <- factor(directmktg$buy, levels = c("no", "yes"))
+sp <- splitsample(directmktg, outcome = buy)
+train <- sp$train
+test  <- sp$test
+
+# --- Group-level split (keep each choice set together) ---
+sp2 <- splitsample(my_long, group = chid, choice = choice, alt = alt, p = 0.8)
+train2 <- sp2$train
+test2  <- sp2$test
+
+# --- Group-level split by respondent (keep all rows per person together) ---
+sp3 <- splitsample(my_long, group = id, choice = choice, alt = alt)
+}
 }

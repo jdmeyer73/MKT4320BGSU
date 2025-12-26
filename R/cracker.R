@@ -1,0 +1,28 @@
+#' Cracker Choice Data
+#'
+#' Long-format choice data from a cracker brand choice experiment involving
+#' three competing brands.
+#'
+#' @details
+#' The dataset contains 784 choice occasions, each with three alternatives,
+#' resulting in 2,352 rows in long format.
+#'
+#' @docType data
+#' @format A data frame with 2,352 rows and 8 variables:
+#' \describe{
+#'   \item{id}{Integer. Consumer identifier for each choice occasion.}
+#'   \item{choice}{Integer. Choice indicator
+#'     (\code{1 = brand chosen}, \code{0 = not chosen}).}
+#'   \item{brand}{Factor or character. Brand identifier
+#'     (\code{Keebler}, \code{Nabisco}, \code{Sunshine}).}
+#'   \item{proz}{Numeric. Price per ounce.}
+#'   \item{disp}{Integer. Display indicator
+#'     (\code{1 = on display}, \code{0 = not on display}).}
+#'   \item{feat}{Integer. Feature advertising indicator
+#'     (\code{1 = on feature}, \code{0 = not on feature}).}
+#'   \item{income}{Numeric. Household income in thousands of dollars.}
+#'   \item{kids}{Integer. Household kids indicator
+#'     (\code{1 = has kids}, \code{0 = no kids}).}
+#' }
+#' @source Adapted from the \code{mlogit} package dataset.
+"cracker"

@@ -2,34 +2,42 @@
 % Please edit documentation in R/logreg_cut.R
 \name{logreg_cut}
 \alias{logreg_cut}
-\title{Sensitivity/Specificity Plot}
+\title{(Deprecated) Sensitivity/Specificity Plot for Logistic Regression}
 \usage{
 logreg_cut(MOD, DATA, POS)
 }
 \arguments{
-\item{MOD}{The saved results of a binary logistic regression glm() call}
+\item{MOD}{A fitted binary logistic regression \code{glm} object.}
 
-\item{DATA}{The name of the data frame for which the classification matrix
-should be produced (i.e., training data, holdout data, etc.)}
+\item{DATA}{A data frame for which cutoff diagnostics should be computed.}
 
-\item{POSITIVE}{The level of the factor variable that is "true" or a
-"success"; must be in quotations}
+\item{POS}{The level representing the positive outcome.}
 }
 \value{
-A ggplot object
+Invisibly returns the \code{ggplot} object produced by
+\code{\link{cutoff_logistic}}.
 }
 \description{
-This function accepts a binary logistic regression - glm() -
-   object and returns a sensitivity/specificity plot.
+Deprecated. Use \code{\link{cutoff_logistic}} instead.
 }
 \details{
-REQUIRED PACKAGES:
+\strong{Deprecated.} This function is retained for backward compatibility.
+It forwards to \code{\link{cutoff_logistic}} and reproduces the original
+sensitivity, specificity, and accuracy plot across classification cutoffs.
+
+Migration notes:
 \itemize{
-  \item ggplot2
+\item \code{MOD} maps directly to \code{MOD}.
+\item \code{DATA} maps directly to \code{DATA}.
+\item \code{POS} maps to \code{POSITIVE}.
+\item The new function supports optional second data sets and improved
+input validation.
 }
 }
 \examples{
-model <- glm(buy ~ age + gender, train, family="binomial")
-
+\dontrun{
+model <- glm(buy ~ age + gender, train, family = "binomial")
 logreg_cut(model, train, "Yes")
+}
+
 }

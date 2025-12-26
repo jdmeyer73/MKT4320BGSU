@@ -2,7 +2,7 @@
 % Please edit documentation in R/reguplift.R
 \name{reguplift}
 \alias{reguplift}
-\title{Regression Uplift Modeling}
+\title{Regression Uplift Modeling (deprecated)}
 \usage{
 reguplift(
   model,
@@ -15,55 +15,46 @@ reguplift(
 )
 }
 \arguments{
-\item{model}{A logistic or linear regression model saved results. The 
-model must have been run where the treatment variable was the first term
-in the right-hand side of the model formula, followed by all independent
-variables. For option \code{int="Y"}, no interaction terms should have
-been included in the original model.}
+\item{model}{A fitted logistic (\code{glm}, logit) or linear (\code{lm}) regression model.}
 
-\item{treatment}{The variable name identifying the treatment variable. Must 
-be in quotations.}
+\item{treatment}{Character string; name of the treatment variable.}
 
-\item{pdata}{That data upon which to calculate the lift. Default is
-\code{NULL}, in which case the lift will be calculated using the original
-model data.}
+\item{pdata}{Optional data frame used to compute uplift (legacy name).}
 
-\item{ng}{The number of groups to split the data for the group output table 
-and the plots. Must be an integer between 5 and 20. Default is 10.}
+\item{ng}{Integer; number of groups (bins). Must be between 5 and 20.}
 
-\item{int}{An indicator if an interaction check between independent variables
-is desired (\code{int="Y"}) or not (\code{int="N"}). Default is N.}
+\item{ar}{Optional numeric aspect ratio for plots.}
 
-\item{ct}{An indicator if comparison tables between treatment levels is
-desired (\code{ct="Y"}) or not (\code{ct="N"}). Default is N.}
+\item{int}{Legacy interaction option (ignored).}
+
+\item{ct}{Legacy comparison-table option (ignored).}
 }
 \value{
-A list containing the following objects:
-\itemize{
-  \item \code{$group} Lift results by ordered group based on \code{ng}
-  \item \code{$all} Original data or \code{pdata} with lift values appended
-  \item \code{$plots} A Qini plot (\code{$qini}), a mean uplift plot by 
-    ordered group (\code{$uplift}), and a cumulative gain plot by ordered
-    group (\code{$c.gain})
-  \item \code{$comp} Comparison table between treatment levels (if requested).
-  \item \code{$int} Interaction table showing significant potential 
-    interactions (if requested).
-}
+A list with uplift results, matching the core structure of
+\code{\link[=easy_uplift]{easy_uplift()}}: grouped results, observation-level lift, plots,
+fitted subgroup models, and metadata.
 }
 \description{
-This function performs uplift modeling based on either logistic
-    regression (for binary outcomes) or linear regression (for continuous 
-    outcomes). The function uses the two-model, indirect modeling approach.
+\code{reguplift()} is deprecated and will be removed in a future release.
+Use \code{\link[=easy_uplift]{easy_uplift()}} instead.
 }
 \details{
-REQUIRED PACKAGES:
+This is a thin wrapper around \code{\link[=easy_uplift]{easy_uplift()}} provided for backward
+compatibility.
+
+\strong{Migration notes}
 \itemize{
-  \item \code{ggplot2}
-  \item \code{gtsummary} (if \code{ct="Y"} option used)
-  \item \code{flextable} (if \code{ct="Y"} or \code{int="Y"} option used)
+\item \code{ng}   → \code{bins}
+\item \code{pdata} → \code{newdata}
+\item \code{ar}   → \code{aspect_ratio}
+\item \code{ct} and \code{int} are no longer supported and are ignored
 }
 }
 \examples{
-results.visit.w <- reguplift(model.visit.w, "promotion", ng=10)
-results.visit.w <- reguplift(model.visit.w, "promotion", ng=10, ct="Y", int="Y")
+\dontrun{
+res <- reguplift(model.visit.w, "promotion", ng = 10)
+}
+}
+\seealso{
+\code{\link[=easy_uplift]{easy_uplift()}}
 }

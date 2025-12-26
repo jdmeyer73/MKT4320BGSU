@@ -1,117 +1,48 @@
-#' @title Gain and Lift Tables/Charts
-#' @description This function accepts a binary logistic regression - glm() -
-#'    object and returns a list object of gain and lift tables and charts for
-#'    both training data and test/holdout data.
+#' @title (Deprecated) Gain and Lift Tables/Charts
+#' @description
+#' Deprecated. Use \code{\link{gainlift_logistic}} instead.
+#'
 #' @details
-#' For best results, the results of the function should be saved to an object. \cr
-#' REQUIRED PACKAGES:
+#' \strong{Deprecated.} This function is retained for backward compatibility.
+#' It forwards to \code{\link{gainlift_logistic}}.
+#'
+#' Migration notes:
 #' \itemize{
-#'   \item ggplot2
-#'   \item dplyr
-#'   \item tidyr
+#'   \item \code{MOD}, \code{TRAIN}, \code{TEST}, and \code{POSITIVE} map directly.
+#'   \item The new function enforces that the outcome variable is a factor in both
+#'     \code{TRAIN} and \code{TEST}.
+#'   \item Return elements are preserved (\code{gaintable}, \code{lifttable},
+#'     \code{gainplot}, \code{liftplot}).
 #' }
-#' @param MOD The saved results of a binary logistic regression glm() call
-#' @param TRAIN The name of the data frame containing the training data
-#' @param TEST The name of the data frame containing the test/holdout data
-#' @param POSITIVE The level of the factor variable that is "true" or a
-#'    "success"; must be in quotations
-#' @return A list containing the following objects:
-#' \itemize{
-#'   \item $gaintable - Gain table for both training and test/holdout
-#'       sample demi-deciles
-#'   \item $gainplot - ggplot object containing the gain plot
-#'   \item $lifttable - Lift table for both training and test/holdout
-#'       sample demi-deciles
-#'   \item $liftplot - ggplot object containing the lift plot
-#' }
+#'
+#' @param MOD A fitted binary logistic regression \code{glm} object.
+#' @param TRAIN Training data.
+#' @param TEST Test/holdout data.
+#' @param POSITIVE Factor level representing the positive / "success" class.
+#'
+#' @return A list with \code{gaintable}, \code{lifttable}, \code{gainplot}, and \code{liftplot}.
+#'
 #' @examples
-#' model <- glm(buy ~ age + gender, train, family="binomial")
+#' \dontrun{
+#' model <- glm(buy ~ age + gender, train, family = "binomial")
 #'
-#' # Save gainlift results to object called gl
+#' # Save gain/lift results
 #' gl <- gainlift(model, train, test, "Yes")
-#'
-#' # Request results from the "gl" object
 #' gl$gaintable
 #' gl$gainplot
 #' gl$lifttable
 #' gl$liftplot
-
-gainlift <- function(MOD,TRAIN,TEST,POSITIVE) {
-   require(ggplot2)
-   require(dplyr)
-   require(tidyr)
-
-   pr.t <- cbind(TRAIN,
-                 pred.t=predict(MOD,
-                                TRAIN,
-                                type="response")) %>%
-      mutate(bg=(21-ntile(pred.t,20))/20,
-             pos=ifelse(TRAIN[[toString(formula(MOD)[[2]])]]==POSITIVE,1,0)) %>%
-      group_by(bg) %>%
-      summarise(pos=sum(pos),
-                obs=n()) %>%
-      mutate(percpos=cumsum(pos)/max(cumsum(pos)),
-             perobs=cumsum(obs)/max(cumsum(obs)),
-             lift=cumsum(pos)/(cumsum(obs)*(max(cumsum(pos))/max(cumsum(obs)))),
-             sample="Training") %>%
-      select(bg, percpos, lift, sample)
-
-
-   pr.h <- cbind(TEST,
-                 pred.h=predict(MOD,
-                                TEST,
-                                type="response")) %>%
-      mutate(bg=(21-ntile(pred.h,20))/20,
-             pos=ifelse(TEST[[toString(formula(MOD)[[2]])]]==POSITIVE,1,0)) %>%
-      group_by(bg) %>%
-      summarise(pos=sum(pos),
-                obs=n()) %>%
-      mutate(percpos=cumsum(pos)/max(cumsum(pos)),
-             perobs=cumsum(obs)/max(cumsum(obs)),
-             lift=cumsum(pos)/(cumsum(obs)*(max(cumsum(pos))/max(cumsum(obs)))),
-             sample="Holdout") %>%
-      select(bg, percpos, lift, sample)
-
-   base <- cbind.data.frame(bg=seq(0.05,1,.05), percpos=seq(0.05,1,.05), lift=1, sample="Baseline")
-
-   pr <- rbind(pr.t,pr.h, base)
-
-   gainplot <- ggplot(aes(x=bg, y=percpos, color=sample), data=pr) +
-      geom_point(size=1.5) +
-      geom_line(size=1) +
-      scale_x_continuous("Proportion Customers Contacted",
-                         limits=c(.05,1), breaks=seq(.1,1,.1)) +
-      scale_y_continuous("Proportion Customers Positive",
-                         limits=c(.05,1), breaks=seq(.1,1,.1)) +
-      scale_color_manual("",
-                         breaks=c("Training", "Holdout", "Baseline"),
-                         values=c("forestgreen", "navy", "red4")) +
-      theme(legend.position="bottom")
-
-   liftplot <- ggplot(aes(x=bg, y=lift, color=sample), data=pr) +
-      geom_point(size=1.5) +
-      geom_line(size=1) +
-      scale_x_continuous("Proportion Customers Contacted",
-                         limits=c(.05,1), breaks=seq(.1,1,.1)) +
-      scale_y_continuous("Lift") +
-      scale_color_manual("",
-                         breaks=c("Training", "Holdout", "Baseline"),
-                         values=c("forestgreen", "navy", "red4")) +
-      theme(legend.position="bottom")
-
-   lifttable <- pr %>%
-      select(-percpos) %>%
-      filter(sample!="Baseline") %>%
-      spread(sample, lift) %>%
-      rename("% Sample"=bg)
-
-   gaintable <- pr %>%
-      select(-lift) %>%
-      filter(sample!="Baseline") %>%
-      spread(sample, percpos) %>%
-      rename("% Sample"=bg)
-
-   results <- list("gainplot"=gainplot, "liftplot"=liftplot,
-                   "gaintable"=gaintable, "lifttable"=lifttable)
-   return(results)
+#' }
+#'
+#' @export
+gainlift <- function(MOD, TRAIN, TEST, POSITIVE) {
+   
+   .Deprecated("gainlift_logistic")
+   
+   gainlift_logistic(
+      MOD      = MOD,
+      TRAIN    = TRAIN,
+      TEST     = TEST,
+      POSITIVE = POSITIVE
+   )
 }

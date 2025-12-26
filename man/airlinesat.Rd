@@ -5,45 +5,99 @@
 \alias{airlinesat}
 \title{Airline Satisfaction Data}
 \format{
-A data frame with 1,065 rows and 70 columns:
+A data frame with 1,065 rows and 70 variables:
 \describe{
-  \item{age}{Age}
-  \item{country}{Home Country}
-  \item{flight_class}{Class of flight (Economy or Business)}
-  \item{flight_latest}{Lastest flight with airline}
-  \item{flight_purpose}{Purpose of flight (Business or Leisure)}
-  \item{flight_type}{Type of flight (Domestic or International)}
-  \item{gender}{Gender}
-  \item{language}{Primary language}
-  \item{nflights}{Flights in past 12 months}
-  \item{status}{Loyalty program status}
-  \item{e1 to e23}{Traveler expectations - scale 1(-) to 100(+)}
-  \item{s1 to s23}{Traveler satisfaction with Oddjob - scale 1(-) to 100(+)}
-  \item{nps}{Net Promoter Score}
-  \item{sat1}{General satisfaction - scale 1(-) to 7(+)}
-  \item{sat2}{Close to ideal airline - scale 1(-) to 7(+)}
-  \item{sat3}{Meets expectations - scale 1(-) to 7(+)}
-  \item{loy1}{Positive WOM - scale 1(-) to 7(+)}
-  \item{loy2}{Recommend - scale 1(-) to 7(+)}
-  \item{loy3}{Encourage - scale 1(-) to 7(+)}
-  \item{loy4}{First choice - scale 1(-) to 7(+)}
-  \item{loy5}{Intend to stay - scale 1(-) to 7(+)}
-  \item{com1}{Committed - scale 1(-) to 7(+)}
-  \item{com2}{Relationship meaningful - scale 1(-) to 7(+)}
-  \item{com3}{Hard loss if out of business - scale 1(-) to 7(+)}
-  \item{overall_sat}{Overall satisfaction - scale 1(-) to 7(+)}
-  \item{reputation}{Overall reputation - scale 1(-) to 7(+)}
+\item{age}{Numeric. Respondent age in years.}
+\item{country}{Factor or character. Respondent home country.}
+\item{flight_class}{Factor or character. Class of flight (\code{Economy}, \code{Business}).}
+\item{flight_latest}{Factor or character. Most recent flight with the airline.}
+\item{flight_purpose}{Factor or character. Purpose of flight (\code{Business}, \code{Leisure}).}
+\item{flight_type}{Factor or character. Type of flight (\code{Domestic}, \code{International}).}
+\item{gender}{Factor or character. Gender.}
+\item{language}{Factor or character. Primary language.}
+\item{nflights}{Integer. Number of flights taken in the past 12 months.}
+\item{status}{Factor or character. Loyalty program status.}
+
+\item{com1}{Numeric or integer. Commitment item (1 = very negative, 7 = very positive).}
+\item{com2}{Numeric or integer. Commitment item (1 = very negative, 7 = very positive).}
+\item{com3}{Numeric or integer. Commitment item (1 = very negative, 7 = very positive).}
+
+\item{e1}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e2}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e3}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e4}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e5}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e6}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e7}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e8}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e9}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e10}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e11}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e12}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e13}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e14}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e15}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e16}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e17}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e18}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e19}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e20}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e21}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e22}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+\item{e23}{Numeric. Expectation item (1 = very negative, 100 = very positive).}
+
+\item{s1}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s2}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s3}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s4}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s5}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s6}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s7}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s8}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s9}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s10}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s11}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s12}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s13}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s14}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s15}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s16}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s17}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s18}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s19}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s20}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s21}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s22}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+\item{s23}{Numeric. Satisfaction item (1 = very negative, 100 = very positive).}
+
+\item{nps}{Numeric or integer. Net Promoter Score.}
+\item{overall_sat}{Numeric or integer. Overall satisfaction (1 = very negative, 7 = very positive).}
+\item{reputation}{Numeric or integer. Overall reputation (1 = very negative, 7 = very positive).}
+
+\item{sat1}{Numeric or integer. Satisfaction item (1 = very negative, 7 = very positive).}
+\item{sat2}{Numeric or integer. Satisfaction item (1 = very negative, 7 = very positive).}
+\item{sat3}{Numeric or integer. Satisfaction item (1 = very negative, 7 = very positive).}
+
+\item{loy1}{Numeric or integer. Loyalty intention item (1 = very negative, 7 = very positive).}
+\item{loy2}{Numeric or integer. Loyalty intention item (1 = very negative, 7 = very positive).}
+\item{loy3}{Numeric or integer. Loyalty intention item (1 = very negative, 7 = very positive).}
+\item{loy4}{Numeric or integer. Loyalty intention item (1 = very negative, 7 = very positive).}
+\item{loy5}{Numeric or integer. Loyalty intention item (1 = very negative, 7 = very positive).}
 }
 }
 \source{
-\url{https://www.guide-market-research.com/spss/downloads/}
+Downloaded from the authors' companion resources site.
 }
 \usage{
-data(airlinesat)
+airlinesat
 }
 \description{
-Dataset adapted from "A concise guide to market research" by Erik Mooi and
-Marko Sarstedt. Contains passenger information, expectations, and
-satisfaction ratings for a fictional airline, Oddjob Airways.
+Dataset adapted from \emph{A Concise Guide to Market Research} by Erik Mooi and
+Marko Sarstedt. Contains passenger characteristics, expectations, and
+satisfaction ratings for a fictional airline (Oddjob Airways).
+}
+\details{
+Commonly used for teaching customer satisfaction modeling,
+expectation--disconfirmation, and loyalty analysis.
 }
 \keyword{datasets}

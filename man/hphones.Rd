@@ -5,29 +5,31 @@
 \alias{hphones}
 \title{Headphones Conjoint Analysis Data}
 \format{
-A data frame with 1,539 rows and 9 columns:
+A data frame with 1,539 rows and 9 variables:
 \describe{
-  \item{\code{id}}{Identification number for each case}
-  \item{\code{profile}}{Identification number for each profile}
-  \item{\code{rating}}{Profile rating (0:Low to 100:High)}
-  \item{\code{brand}}{Brand attribute (Sony, Beats, Bose)}
-  \item{\code{bass}}{Bass level attribute (Low, Medium, High)}
-  \item{\code{price}}{Headphone price attribute ($99, $149, $199)}
-  \item{\code{inc}}{Respondent income in 000s}
-  \item{\code{age}}{Respondent age in years}
-  \item{\code{gender}}{Respondent gender (Female, Male)}
+\item{id}{Integer. Respondent identifier.}
+\item{profile}{Integer. Profile identifier.}
+\item{rating}{Numeric. Profile rating on a 0--100 scale
+(\code{0 = low}, \code{100 = high}).}
+\item{brand}{Factor or character. Brand attribute
+(\code{Sony}, \code{Beats}, \code{Bose}).}
+\item{bass}{Factor or character. Bass level attribute
+(\code{Low}, \code{Medium}, \code{High}).}
+\item{price}{Factor or character. Price attribute
+(\code{99}, \code{149}, \code{199}).}
+\item{income}{Numeric. Respondent income in thousands of dollars.}
+\item{age}{Numeric. Respondent age in years.}
+\item{gender}{Factor or character. Respondent gender.}
 }
 }
 \source{
-Unknown
+Unknown.
 }
 \usage{
-data(hphones)
+hphones
 }
 \description{
-Data from 171 respondents to a traditional conjoint analysis. Each 
-    respondent rated nine product profiles of headphones. \cr
-    \cr
-Used in Lab Assignment 8
+Ratings-based conjoint analysis data for headphones, where respondents
+evaluated multiple product profiles defined by brand and features.
 }
 \keyword{datasets}

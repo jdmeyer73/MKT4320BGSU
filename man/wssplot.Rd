@@ -2,34 +2,40 @@
 % Please edit documentation in R/wssplot.R
 \name{wssplot}
 \alias{wssplot}
-\title{Scree Plot Before k-Means Clustering}
+\title{Scree Plot Before k-Means Clustering (Deprecated)}
 \usage{
 wssplot(data, nc = 15, seed = 4320)
 }
 \arguments{
-\item{data}{A data frame containing only the variables on which to cluster}
+\item{data}{A data frame containing only the (numeric) variables used for clustering.}
 
-\item{nc}{An integer representing the maximum number of clusters to plot
-(default = 15)}
+\item{nc}{Integer; maximum number of clusters to plot (default = 15).}
 
-\item{seed}{A random number seed for reproducible results (default = 4320)}
+\item{seed}{Integer; random seed for reproducible results (default = 4320).}
 }
 \value{
-A ggplot object
+A ggplot object (WSS vs. k).
 }
 \description{
-This function produces a scree plot for 1 to \emph{n} clusters
+Deprecated. Use \code{\link{easy_km_fit}} instead.
 }
 \details{
-REQUIRED PACKAGES:
+This function is a thin wrapper around \code{\link{easy_km_fit}}.
+It returns the same WSS scree plot as \code{easy_km_fit(...)} (element
+\code{scree_plot}).
+
+Migration:
 \itemize{
-  \item ggplot2
+\item \code{wssplot(data, nc, seed)} \eqn{\rightarrow} \code{easy_km_fit(data, vars = names(data), k_range = 1:nc, seed = seed)$scree_plot}
 }
 }
 \examples{
-#Scree plot with default values
+\dontrun{
+# Scree plot with default values
 wssplot(sc.clvar)
 
-#Scree plot for up to 10 clusters and 1000 for random number seed
-wssplot(sc.clvar, 10, 1000)
+# Scree plot up to 10 clusters with seed 1000
+wssplot(sc.clvar, nc = 10, seed = 1000)
+}
+
 }

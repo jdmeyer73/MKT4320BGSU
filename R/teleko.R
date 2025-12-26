@@ -1,23 +1,29 @@
-#' A/B Testing Data
+#' Teleko Mobile A/B Testing Data
 #'
-#' Results of an A/B test for Teleko Mobile.
+#' Results of an A/B test conducted for Teleko Mobile, examining customer renewal
+#' behavior and service usage.
 #'
-#' @usage data(teleko)
-#' @format
-#' A data frame with 10000 rows and 12 columns:
+#' @docType data
+#' @format A data frame with 10,000 rows and 12 variables:
 #' \describe{
-#'   \item{\code{renew}}{Yes if customer renewed, No otherwise}
-#'   \item{\code{clv}}{predicted revenue in future years}
-#'   \item{\code{promotion}}{Yes if customer received promotion, No otherwise}
-#'   \item{\code{tenure}}{Months since contract started}
-#'   \item{\code{past60}}{Expenditures in 60 days prior to renewal decision}
-#'   \item{\code{past30}}{Expenditures in 30 days prior to renewal decision}
-#'   \item{\code{past7}}{Expenditures in 7 days prior to renewal decision}
-#'   \item{\code{data}}{Yes if customer has data package, No otherwise}
-#'   \item{\code{inter}}{Yes if customer has international plan, No otherwise}
-#'   \item{\code{family}}{Yes if customer has family plan, No otherwise}
-#'   \item{\code{csvc}}{Number of customer service calls in prior 30 days}
-#'   \item{\code{os}}{Phone operating system (Android, IOs, Other)}
+#'   \item{renew}{Factor or character. Customer renewed service
+#'     (\code{Yes}, \code{No}).}
+#'   \item{clv}{Numeric. Predicted customer lifetime value (future revenue).}
+#'   \item{promotion}{Factor or character. Received promotion
+#'     (\code{Yes}, \code{No}).}
+#'   \item{tenure}{Integer. Months since contract start.}
+#'   \item{past60}{Numeric. Expenditures in the 60 days prior to renewal decision.}
+#'   \item{past30}{Numeric. Expenditures in the 30 days prior to renewal decision.}
+#'   \item{past7}{Numeric. Expenditures in the 7 days prior to renewal decision.}
+#'   \item{data}{Factor or character. Has data package
+#'     (\code{Yes}, \code{No}).}
+#'   \item{inter}{Factor or character. Has international plan
+#'     (\code{Yes}, \code{No}).}
+#'   \item{family}{Factor or character. Has family plan
+#'     (\code{Yes}, \code{No}).}
+#'   \item{csvc}{Integer. Number of customer service calls in prior 30 days.}
+#'   \item{os}{Factor or character. Phone operating system
+#'     (\code{Android}, \code{iOS}, \code{Other}).}
 #' }
-#' @source Harvard Business School Publishing, Case 523-005
+#' @source Harvard Business School Publishing, Case 523-005.
 "teleko"

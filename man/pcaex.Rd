@@ -2,63 +2,63 @@
 % Please edit documentation in R/pcaex.R
 \name{pcaex}
 \alias{pcaex}
-\title{Easy PCA}
+\title{Easy PCA (Deprecated)}
 \usage{
 pcaex(data, group, pref, comp = NULL)
 }
 \arguments{
-\item{data}{A data frame containing the variables on which to perform the
-principal components analysis. Can include a preference variable.}
+\item{data}{A data frame containing the variables on which to perform PCA.}
 
-\item{group}{Name of the grouping variable. Must be in quotations. Can be
-excluded if no grouping variable exists. When provided, the PCA is 
-performed on an aggregatded data frame (i.e., mean values by group)}
+\item{group}{Optional; name of the grouping variable (string). If provided,
+PCA is fit on mean-aggregated values by group.}
 
-\item{pref}{Name of the preference variable. Must be in quotations. Can be 
-excluded if no preference variable exists.}
+\item{pref}{Optional; name of a preference variable (string) to exclude from PCA.}
 
-\item{comp}{An integer representing the number of components to retain 
-(default = NULL, which retains all components).}
+\item{comp}{Optional integer; number of components to retain. If missing or
+\code{NULL}, returns diagnostics (eigen table + scree plot). If \code{>= 1},
+returns retained-solution tables.}
 }
 \value{
-A list containing the following objects:
-\itemize{
-  \item If \code{comp=NULL}:
-     \itemize{
-        \item \code{$plot}: Scree plot
-        \item \code{$table}: Table of eigenvalues
-      }
-  \item If \code{comp >= 1}:
-     \itemize{
-        \item \code{$table}: Table of eigenvalues
-        \item \code{$unrotated}: Unrotated factor loading table
-        \item \code{$rotated}: Rotated factor loading table
-        \item \code{$pcaobj}: PCA object from function \code{prcomp}
-     }
+If \code{comp} is missing or \code{NULL}:
+\describe{
+\item{table}{Eigenvalue table (data.frame).}
+\item{plot}{Scree plot (ggplot).}
+}
+If \code{comp >= 1}:
+\describe{
+\item{table}{Eigenvalue table (data.frame).}
+\item{unrotated}{Unrotated loading table + Unexplained (data.frame).}
+\item{rotated}{Varimax-rotated loading table + Unexplained (data.frame).}
+\item{pcaobj}{The fitted \code{prcomp} object.}
 }
 }
 \description{
-This function provides results from an standard principal 
-    components analysis in preparation for creating PCA perceptual maps.
-    While it can be used for traditional, it may not perform correctly.
+Deprecated. Use \code{\link{easy_pca_fit}} (diagnostics) and
+\code{\link{easy_pca_final}} (retained solution) instead.
 }
 \details{
-For best results, the results of the function should be saved to an object. \cr
-REQUIRED PACKAGES:
+This function is a thin wrapper kept for backward compatibility.
+
+Migration:
 \itemize{
-  \item ggplot2
-  \item dplyr
+\item \code{pcaex(data, group=..., pref=..., comp=NULL)} \eqn{\rightarrow}
+\code{easy_pca_fit(data, vars=..., group=...)}
+\item \code{pcaex(data, group=..., pref=..., comp=k)} \eqn{\rightarrow}
+\code{easy_pca_final(data, vars=..., comp=k, group=...)}
 }
 }
 \examples{
-#All components with grouping and preference variables
-gb.all <- pcaex(pcadata, group="brand", pref="pref")
-gb.all$table
-gb.all$plot
+\dontrun{
+# Diagnostics mode (all components)
+res1 <- pcaex(pcadata, group = "brand", pref = "pref")
+res1$table
+res1$plot
 
-#Two components with grouping and preference variables
-gb.two <- pcaex(pcadata, group="brand", pref="pref", comp=2)
-gb.two$table
-gb.two$unrotated
-gb.two$rotated
+# Retained-solution mode (2 components)
+res2 <- pcaex(pcadata, group = "brand", pref = "pref", comp = 2)
+res2$table
+res2$unrotated
+res2$rotated
+}
+
 }

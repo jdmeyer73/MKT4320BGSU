@@ -1,17 +1,17 @@
 #' Vitamins Preference Data
 #'
-#' Preference data for vitamin brands with consumer demographic information.
+#' Consumer preference data for vitamin brands with basic demographic information.
 #'
-#' @usage data(vitamins)
-#' @format
-#' A data frame with 735 rows and 4 columns
+#' @docType data
+#' @format A data frame with 735 rows and 4 variables:
 #' \describe{
-#'   \item{\code{brand}}{Consumer brand preference (Alphagenix, Deltastation,
-#'       Sigmastop)}
-#'   \item{\code{female}}{\code{Yes} if consumer is female, \code{No} 
-#'       otherwise}
-#'   \item{\code{age}}{Consumer actual age)}
-#'   \item{\code{income}}{Consumer income level (Low, Medium, High)}
+#'   \item{brand}{Factor or character. Preferred vitamin brand
+#'     (\code{Alphagenix}, \code{Deltastation}, \code{Sigmastop}).}
+#'   \item{female}{Factor or character. Gender indicator
+#'     (\code{Yes} = female, \code{No} = not female).}
+#'   \item{age}{Numeric or integer. Consumer age in years.}
+#'   \item{income}{Factor or character. Household income category
+#'     (\code{Low}, \code{Medium}, \code{High}).}
 #' }
-#' @source Unknown
+#' @source Unknown.
 "vitamins"

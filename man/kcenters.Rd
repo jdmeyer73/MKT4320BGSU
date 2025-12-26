@@ -2,33 +2,50 @@
 % Please edit documentation in R/kcenters.R
 \name{kcenters}
 \alias{kcenters}
-\title{k-Means Cluster Centers}
+\title{k-Means Cluster Centers (Deprecated)}
 \usage{
-kcenters(kobject)
+kcenters(kobject, k = NULL)
 }
 \arguments{
-\item{kobject}{A saved \emph{k}-means object}
+\item{kobject}{A \code{kmeans} object, or an \code{easy_km_fit()} result (advanced).}
+
+\item{k}{Optional integer. If \code{kobject} is an \code{easy_km_fit()} result,
+\code{k} selects which stored solution to use.}
 }
 \value{
-A list containing the following objects:
-\itemize{
-  \item \code{$table} A table of the cluster center means.
-  \item \code{$plot} A plot of the cluster center means.
+A list with components:
+\describe{
+\item{table}{A data frame of cluster center means (with \code{Cluster} column).}
+\item{plot}{A ggplot bar chart of cluster centers by variable.}
 }
 }
 \description{
-This function take a \emph{k}-means object and creates a table and
-    plot of the cluster centers.
+Deprecated. Use \code{\link{easy_km_final}} instead.
 }
 \details{
-For best results, the results of the function should be saved to an object. \cr
-REQUIRED PACKAGES:
+This function is kept for backward compatibility. It produces a table of
+cluster centers and a bar plot of those centers. New workflows should use
+\code{\link{easy_km_fit}} + \code{\link{easy_km_final}}.
+
+Migration:
 \itemize{
-  \item ggplot2
+\item If you already have a \code{kmeans} object: use it directly or prefer
+\code{easy_km_fit()} / \code{easy_km_final()} for a full workflow.
+\item If you have an \code{easy_km_fit()} result: extract a stored solution via
+\code{fit$km_all[[as.character(k)]]} and/or use \code{easy_km_final(fit, data, k)}.
 }
 }
 \examples{
-kmout <- kcenters(k4)
-kmout$table
-kmout$plot
+\dontrun{
+# Legacy usage (kmeans object)
+km <- stats::kmeans(scale(iris[, 1:4]), centers = 3, nstart = 25)
+out <- kcenters(km)
+out$table
+out$plot
+
+# If you have an easy_km_fit() object:
+# fit <- easy_km_fit(mydata, vars = c("x1","x2"), k_range = 2:6)
+# out <- kcenters(fit, k = 4)
+}
+
 }

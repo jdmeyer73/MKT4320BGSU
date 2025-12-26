@@ -2,44 +2,39 @@
 % Please edit documentation in R/percmap.R
 \name{percmap}
 \alias{percmap}
-\title{Easy Perceptual and Joint Space Maps from PCA}
+\title{Perceptual / Joint Space Map from PCA (Deprecated)}
 \usage{
 percmap(data, group, pref)
 }
 \arguments{
-\item{data}{A data frame containing the variables on which to perform the
-principal components analysis. Can include a preference variable.}
+\item{data}{A data frame containing attribute variables and a grouping variable.}
 
-\item{group}{Name of the grouping variable. Must be in quotations.}
+\item{group}{Character string; name of the grouping variable.}
 
-\item{pref}{Name of the preference variable. Must be in quotations. Can be 
-excluded if no preference variable exists.}
+\item{pref}{Optional character string; name of a numeric preference variable.}
 }
 \value{
-\itemize{ 
-  \item If a \code{pref} variable is not included, returns a perceptual map
-  \item If a \code{pref} variable is included, returns a joint space map
-}
+A \code{ggplot} perceptual (or joint space) map.
 }
 \description{
-This function produces perceptual or joint spaced maps based
-    on the first two principal components of a PCA
+Deprecated. Use \code{\link{easy_pca_maps}} instead.
 }
 \details{
-REQUIRED PACKAGES:
+This function is kept for backward compatibility. It produces a single
+perceptual or joint space map using the first two principal components.
+
+Migration:
 \itemize{
-  \item ggplot2
-  \item dplyr
+\item \code{percmap(data, group)} \eqn{\rightarrow}
+\code{easy_pca_maps(data, vars, group, comp = 2)$plots[[1]]}
+\item \code{percmap(data, group, pref)} \eqn{\rightarrow}
+\code{easy_pca_maps(data, vars, group, comp = 2, pref = pref)$plots[[1]]}
 }
 }
 \examples{
-#Perceptual map
-pmdata <- greekbrands \%>\%
-   select(perform, leader, fun, serious bargain, value, brand)
-percmap(pmdata, group="brand")
+\dontrun{
+percmap(mydata, group = "brand")
+percmap(mydata, group = "brand", pref = "liking")
+}
 
-#Joint Space map
-jsmdata <- greekbrands \%>\%
-   select(perform, leader, fun, serious bargain, value, pref, brand)
-percmap(pmdata, group="brand", pref="pref")
 }

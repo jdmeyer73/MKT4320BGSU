@@ -2,54 +2,48 @@
 % Please edit documentation in R/gainlift.R
 \name{gainlift}
 \alias{gainlift}
-\title{Gain and Lift Tables/Charts}
+\title{(Deprecated) Gain and Lift Tables/Charts}
 \usage{
 gainlift(MOD, TRAIN, TEST, POSITIVE)
 }
 \arguments{
-\item{MOD}{The saved results of a binary logistic regression glm() call}
+\item{MOD}{A fitted binary logistic regression \code{glm} object.}
 
-\item{TRAIN}{The name of the data frame containing the training data}
+\item{TRAIN}{Training data.}
 
-\item{TEST}{The name of the data frame containing the test/holdout data}
+\item{TEST}{Test/holdout data.}
 
-\item{POSITIVE}{The level of the factor variable that is "true" or a
-"success"; must be in quotations}
+\item{POSITIVE}{Factor level representing the positive / "success" class.}
 }
 \value{
-A list containing the following objects:
-\itemize{
-  \item $gaintable - Gain table for both training and test/holdout
-      sample demi-deciles
-  \item $gainplot - ggplot object containing the gain plot
-  \item $lifttable - Lift table for both training and test/holdout
-      sample demi-deciles
-  \item $liftplot - ggplot object containing the lift plot
-}
+A list with \code{gaintable}, \code{lifttable}, \code{gainplot}, and \code{liftplot}.
 }
 \description{
-This function accepts a binary logistic regression - glm() -
-   object and returns a list object of gain and lift tables and charts for
-   both training data and test/holdout data.
+Deprecated. Use \code{\link{gainlift_logistic}} instead.
 }
 \details{
-For best results, the results of the function should be saved to an object. \cr
-REQUIRED PACKAGES:
+\strong{Deprecated.} This function is retained for backward compatibility.
+It forwards to \code{\link{gainlift_logistic}}.
+
+Migration notes:
 \itemize{
-  \item ggplot2
-  \item dplyr
-  \item tidyr
+\item \code{MOD}, \code{TRAIN}, \code{TEST}, and \code{POSITIVE} map directly.
+\item The new function enforces that the outcome variable is a factor in both
+\code{TRAIN} and \code{TEST}.
+\item Return elements are preserved (\code{gaintable}, \code{lifttable},
+\code{gainplot}, \code{liftplot}).
 }
 }
 \examples{
-model <- glm(buy ~ age + gender, train, family="binomial")
+\dontrun{
+model <- glm(buy ~ age + gender, train, family = "binomial")
 
-# Save gainlift results to object called gl
+# Save gain/lift results
 gl <- gainlift(model, train, test, "Yes")
-
-# Request results from the "gl" object
 gl$gaintable
 gl$gainplot
 gl$lifttable
 gl$liftplot
+}
+
 }

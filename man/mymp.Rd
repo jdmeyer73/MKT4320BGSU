@@ -2,48 +2,53 @@
 % Please edit documentation in R/mymp.R
 \name{mymp}
 \alias{mymp}
-\title{Easy Margin Plots}
+\title{Easy Margin Plots (Deprecated)}
 \usage{
 mymp(model, focal, int = NULL)
 }
 \arguments{
-\item{model}{A saved linear regression (lm) model or binary logistic
-regression (glm, family="binomial") model.}
+\item{model}{A fitted linear regression (\code{lm}) model or binary logistic
+regression (\code{glm}, \code{family = "binomial"}) model.}
 
-\item{focal}{Name of the focal predictor variable. Must be in quotations.}
+\item{focal}{Character string; name of the focal predictor variable.}
 
-\item{int}{Name of the interaction predictor variable. Must be in quotations. 
-Can be excluded if focal variable only wanted (or no interaction exists).}
+\item{int}{Optional character string; name of the interaction variable.}
 }
 \value{
-\itemize{ 
-  \item \code{$plot} A ggplot object.
-  \item \code{$ptable} A ggeffects table that can be saved as a data frame
-   object.
+A list with elements:
+\describe{
+\item{plot}{A ggplot object.}
+\item{ptable}{A \code{ggeffects} table (can be coerced to a data frame).}
 }
 }
 \description{
-This function produces margin plots for a focal predictor or a
-   focal predictor interaction with a another predictor from a linear 
-   or binary logistic regression
+Deprecated. Use \code{\link{easy_mp}} instead.
 }
 \details{
-REQUIRED PACKAGES:
+This function is a thin wrapper around \code{\link{easy_mp}} and is kept for
+backward compatibility. It returns the same list structure as before
+(\code{plot} and \code{ptable}).
+
+Migration:
 \itemize{
-  \item ggplot2
-  \item dplyr
-  \item ggeffects
-  \item insight
+\item \code{mymp(model, focal, int)} \eqn{\rightarrow} \code{easy_mp(model, focal, int)}
 }
 }
 \examples{
-#No interaction
+\dontrun{
+# No interaction
 data(airlinesat)
-model1 <- lm(nps ~ age + nflights, data=airlinesat)
-mymp(model, "age")
+model1 <- lm(nps ~ age + nflights, data = airlinesat)
+out1 <- mymp(model1, "age")
+out1$plot
 
-#Interaction
+# With interaction
 data(directmktg)
-model2 <- glm(buy ~ salary + age*gender, data=directmktg, family="binomial")
-mymp(model2, "age", "gender")
+model2 <- glm(buy ~ salary + age * gender,
+              data = directmktg,
+              family = "binomial")
+out2 <- mymp(model2, "age", "gender")
+out2$plot
+}
+
 }

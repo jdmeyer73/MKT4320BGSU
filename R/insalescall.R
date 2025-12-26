@@ -1,37 +1,24 @@
 #' Insurance Sales Calls
 #'
-#' Data on about 3800 customers of a bank that also sells insurance. The
-#'     customers in the data were contacted to see if they wanted to buy car
-#'     insurance with specific levels of coverage. The outcome variable,
-#'     \code{buy}, is a factor variable with two levels: \emph{Yes}
-#'     if they bought and \emph{No} if they did not buy. As these are
-#'     current customers, the bank has several other variables on each
-#'     customers. \cr
-#'     \cr
-#'     \strong{Used in Lab Assignment 3}
+#' Customer-level data from outbound insurance sales calls made by a bank that
+#' also offers car insurance.
 #'
-#' @usage data(insalescall)
-#' @format
-#' A data frame with 3831 rows and 9 columns:
+#' @docType data
+#' @format A data frame with 3,831 rows and 9 variables:
 #' \describe{
-#'   \item{\code{id}}{Simple ID number for each observation}
-#'   \item{\code{age}}{Customer age in years}
-#'   \item{\code{balance}}{Average bank balance over previous month}
-#'   \item{\code{carloan}}{Factor variable with two levels: \emph{Yes} if
-#'       the customer has a car loan through the bank, \emph{No} otherwise}
-#'   \item{\code{buy}}{Factor variable indicating if the customer bought car
-#'       insurance (\emph{Yes} or \emph{No})}
-#'   \item{\code{educ}}{Factor variable with three levels indicating education
-#'       level: \emph{LT_HS} for less than high school, \emph{HS} for high
-#'       school, and \emph{GT_HS} for some college and above}
-#'   \item{\code{marital}}{Factor variable with three levels (\emph{Divorced},
-#'       \emph{Married}, \emph{Single})}
-#'   \item{\code{homeins}}{Factor variable with two levels (\emph{Yes} if the
-#'       customer has homeowner's insurance through the bank, \emph{No}
-#'       otherwise)}
-#'   \item{\code{preout}}{Factor variable with three levels indicating the
-#'       result of a previous, non-car insurance sales call (\emph{No Previous},
-#'       \emph{Failure}, \emph{Success})}
+#'   \item{id}{Integer. Observation identifier.}
+#'   \item{age}{Numeric. Customer age in years.}
+#'   \item{balance}{Numeric. Average bank balance over the previous month.}
+#'   \item{carloan}{Factor. Has a car loan with the bank (\code{Yes}, \code{No}).}
+#'   \item{buy}{Factor. Purchased car insurance (\code{Yes}, \code{No}).}
+#'   \item{educ}{Factor. Education level
+#'     (\code{LT_HS}, \code{HS}, \code{GT_HS}).}
+#'   \item{marital}{Factor. Marital status
+#'     (\code{Divorced}, \code{Married}, \code{Single}).}
+#'   \item{homeins}{Factor. Has homeowner's insurance with the bank
+#'     (\code{Yes}, \code{No}).}
+#'   \item{preout}{Factor. Outcome of previous non-car insurance call
+#'     (\code{No Previous}, \code{Failure}, \code{Success}).}
 #' }
-#' @source Adapted from \url{https://archive.ics.uci.edu/ml/datasets/bank+marketing}
+#' @source Adapted from the UCI Machine Learning Repository (Bank Marketing).
 "insalescall"

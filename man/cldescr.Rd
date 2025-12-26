@@ -2,73 +2,39 @@
 % Please edit documentation in R/cldescr.R
 \name{cldescr}
 \alias{cldescr}
-\title{Easy Describing Clusters}
+\title{(Deprecated) Describe Clusters}
 \usage{
 cldescr(data, var, vtype = c("F", "C"), cvar)
 }
 \arguments{
-\item{data}{A data frame containing only the variables on which to describe
-the clusters. At least one column in the data frame must contain the
-cluster membership.}
+\item{data}{A data frame containing the cluster column and variables to describe.}
 
-\item{var}{The name of the variable(s) to describe the clusters by. Must be
-in quotations.  For \code{vtype="F"}, can only be one factor variable.
-For \code{vtype="C"}, can be one or more continuous variables}
+\item{var}{Character vector of variables to describe (legacy argument).}
 
-\item{vtype}{The type of variable(s) to describe the clusters by. Must be in
-    quotations. Takes one of the following values:
-\itemize{
-  \item \code{vtype="F"} if \code{var} is a factor variable
-  \item \code{vtype="C"} if \code{var} is a continuous variable(s)
-}}
+\item{vtype}{Ignored. Retained for backward compatibility.}
 
-\item{cvar}{The name of the cluster membership variable. Must be in
-quotations.}
+\item{cvar}{Name of the cluster membership variable.}
 }
 \value{
-A list containing the following objects:
-\itemize{
-  \item \code{$means} contains a table of mean values by cluster. For
-      \code{vtype="F"}, each factor level has a separate column, and the
-      mean values represent the proportion of the cluster that for each
-      factor level.
-  \item \code{$aovp} contains a table of ANOVA p-values. For
-      \code{vtype="C"}, the p-value tests if there are differences between
-      clusters for the continuous variable. For \code{vtype="F"}, the
-      p-value tests if there are differences between clusters for each
-      level of the factor variable.
-   \item \code{$tukey} contains a table of Tukey HSD post-hoc comparison
-      p-values to test which clusters are significantly different from each
-      other. For \code{vtype="C"}, a table will be produced for each
-      \code{var} that has an overall ANOVA p-value < 0.1. For
-      \code{vtype="F"}, a table will be produced for each level of the
-      factor variable that has an overall ANOVA p-value < 0.1.
-}
+Invisibly returns the result from \code{\link{easy_cluster_describe}}.
 }
 \description{
-This function performs describes clusters based on a set of
-    variables and tests if there are significant differences between
-    clusters.
+Deprecated. Use \code{\link{easy_cluster_describe}} instead.
 }
 \details{
-For best results, the results of the function should be saved to an object.
+\strong{Deprecated.} This function is retained for backward compatibility.
+It forwards to \code{\link{easy_cluster_describe}} with the closest possible
+mapping of arguments.
+
+Migration notes:
+\itemize{
+\item \code{data} is passed unchanged.
+\item \code{cvar} maps to \code{cluster_col}.
+\item \code{var} maps to \code{vars}.
+\item \code{vtype} is ignored. Variable type is auto-detected in
+\code{easy_cluster_describe()}.
+\item Output structure differs: the legacy \code{means}, \code{aovp},
+and \code{tukey} objects are no longer returned. See
+\code{\link{easy_cluster_describe}} for the new return format.
 }
-\examples{
-#Describing clusters for a single continuous variable
-out1 <- cldescr(ffseg, var="eatin", vtype="C", cvar="HC3")
-out1$means
-out1$aovp
-out1$tukey
-
-#Describing clusters for a multiple continuous variables
-out2 <- cldescr(ffseg, var=c("eatin","hours"), vtype="C", cvar="HC3")
-out2$means
-out2$aovp
-out2$tukey
-
-#Describing clusters for a factor variable
-out3 <- cldescr(ffseg, var="usertype", vtype="F", cvar="HC3")
-out3$means
-out3$aovp
-out3$tukey
 }

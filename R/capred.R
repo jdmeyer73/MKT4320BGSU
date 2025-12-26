@@ -1,28 +1,37 @@
 #' @title Traditional Conjoint Analysis Profile Comparison
-#' @description This function compares two profiles (specified by the user) 
-#'     from a traditional conjoint analysis.
+#' @description
+#' Compare two user-specified profiles using case-level part-worths from a
+#' traditional conjoint analysis.
+#'
 #' @details
-#' To use this function, it works best to create the profiles by saving them 
-#'     to separate objects. The attribute levels for the profiles should be in 
-#'     the form of: \code{attribute_levelnumber}. \cr
-#'     For example, \emph{Delta} is the first level of the \code{airline} 
-#'     attribute, so we would use \code{airline_1} to indicate that level of
-#'     that attribute.
-#' @param formula An object with a saved formula used in a previous traditional
-#'     conjoint analysis that was analyzed with the \code{tradca()} function
-#' @param data The name of the data frame with the case-level part-worths and
-#'     importances that has been appended with demographic variables
-#' @param prof1 The first profile
-#' @param prof2 The second profile
-#' @return Mean utility and 95 percent confidence intervals for each profile
+#' This is a legacy helper used in older course materials. It is retained for
+#' backwards compatibility but is not used in current student workflows.
+#'
+#' Profiles should be specified using column-name fragments of the form
+#' \code{attribute_levelnumber}. For example, \code{airline_1}.
+#'
+#' @param formula A model formula used in a previous traditional conjoint analysis
+#'   analyzed with \code{tradca()}.
+#' @param data A data frame containing case-level part-worth columns and any
+#'   appended demographics (typically \code{results$casetable} from \code{tradca()}).
+#' @param prof1 Character vector defining profile 1 (e.g., \code{c("airline_1", ...)}).
+#' @param prof2 Character vector defining profile 2.
+#'
+#' @return
+#' Prints mean utility and 95% confidence intervals for each profile.
+#'
 #' @examples
+#' \dontrun{
 #' caform <- value ~ airline + connect + price
-#' results <- tradca(formula = caform, data = airlineca, idvar="caseid")
-#' 
+#' results <- tradca(formula = caform, data = airlineca, idvar = "caseid")
+#'
 #' prof1 <- c("airline_1", "connect_2", "price_3")
 #' prof2 <- c("airline_3", "connect_2", "price_2")
-#' 
+#'
 #' capred(caform, results$casetable, prof1, prof2)
+#' }
+#'
+#' @keywords internal
 
 capred <- function(formula, data, prof1, prof2) {
    if (length(prof1)!=length(prof2)) {

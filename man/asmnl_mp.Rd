@@ -2,37 +2,53 @@
 % Please edit documentation in R/asmnl_mp.R
 \name{asmnl_mp}
 \alias{asmnl_mp}
-\title{Easy Alternative Specific MNL Margin Plots}
+\title{Alternative-Specific MNL Margin Plot (Deprecated)}
 \usage{
 asmnl_mp(mod, focal, type = c("C", "D"))
 }
 \arguments{
-\item{mod}{The object containing the results of the \code{asmnl_est} function}
+\item{mod}{A fitted \code{mlogit} model.}
 
-\item{focal}{The case-specific IV for which a margin plot is wanted in 
-quotations}
+\item{focal}{Character; focal variable name (in quotes).}
 
-\item{type}{The type of the case-specific IV in quotations ("C" for 
-continuous; "D" for dummy variable)}
+\item{type}{Legacy argument kept for compatibility: \code{"C"} for continuous,
+\code{"D"} for binary. This is mapped to \code{pp_as_mnl()} behavior; for
+\code{"D"} the two observed values are used automatically.}
 }
 \value{
-Margin plot using ggplot
+A \code{ggplot} object (legacy behavior).
 }
 \description{
-This function creates a margin plot for a case-specific 
-    independent variable from an estimated alternative specific MNL using
-    the \code{asmnl_est} function.
+Deprecated. Use \code{\link{pp_as_mnl}} instead.
 }
 \details{
-REQUIRED PACKAGES:
-\itemize{
-  \item mlogit
-  \item ggplot2
+\code{asmnl_mp()} is retained for backward compatibility with older course
+materials. New code should call \code{pp_as_mnl()} and use the returned plot:
+\preformatted{
+res <- pp_as_mnl(mod, focal_var = "income", focal_type = "case")
+res$pp_plot
+}
+
+This wrapper returns the \code{$pp_plot} from \code{pp_as_mnl()}.
+
+#' @section Migration note:
+Previously, \code{asmnl_mp()} returned a single margin plot for a
+case-specific focal variable.
+
+Replace:
+\preformatted{
+asmnl_mp(mod, "income", "C")
+}
+
+With:
+\preformatted{
+res <- pp_as_mnl(mod, focal_var = "income")
+res$pp_plot
 }
 }
 \examples{
-altspec_model <- asmnl_est(formula=myformula, data=train.yog, id="id",
-                           alt="brand", choice="choice", 
-                           testdata=test.yog)
-asmnl_mp(altspec_model, "income", "C")
+# mod <- asmnl_est(...)
+# p <- asmnl_mp(mod, "income", "C")  # deprecated
+# p
+
 }

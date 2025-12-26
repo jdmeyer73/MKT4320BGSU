@@ -1,19 +1,21 @@
 #' Breakfast Food Preference Data
 #'
-#' Simulated data for a poll of 880 people about their breakfast preferences, 
-#'     also noting demographics and lifestyle. 
+#' Poll-style data on breakfast food preferences with basic demographics and
+#' lifestyle measures.
 #'
-#' @usage data(bfast)
-#' @format
-#' A data frame with 800 rows and 6 columns
+#' @details
+#' Commonly used for teaching multinomial logistic regression.
+#'
+#' @docType data
+#' @format A data frame with 880 rows and 6 variables:
 #' \describe{
-#'   \item{\code{agecat}}{Consumer age category (Under 31; 31-45; 46-60; 
-#'       Over 60)}
-#'   \item{\code{gender}}{Consumer gender (Female; Male)}
-#'   \item{\code{marital}}{Consumer marital status (Married; Unmarried)}
-#'   \item{\code{bfast}}{Consumer breakfast food preference (Cereal; Bar; Oatmeal)}
-#'   \item{\code{lifestyle}}{Consumer lifestyle (Active; Inactive)}
-#'   \item{\code{age}}{Consumer actual age}
+#'   \item{agecat}{Factor. Age category with levels \code{Under 31}, \code{31-45},
+#'     \code{46-60}, \code{Over 60}.}
+#'   \item{gender}{Factor. Gender with levels \code{Female}, \code{Male}.}
+#'   \item{marital}{Factor. Marital status with levels \code{Married}, \code{Unmarried}.}
+#'   \item{bfast}{Factor. Breakfast preference with levels \code{Cereal}, \code{Bar}, \code{Oatmeal}.}
+#'   \item{lifestyle}{Factor. Lifestyle with levels \code{Active}, \code{Inactive}.}
+#'   \item{age}{Integer. Age in years.}
 #' }
-#' @source Adapted from IBM SPSS Statistics Sample Files
+#' @source Adapted from IBM SPSS Statistics Sample Files.
 "bfast"

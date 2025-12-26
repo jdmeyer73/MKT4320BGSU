@@ -2,50 +2,48 @@
 % Please edit documentation in R/asmnl_est.R
 \name{asmnl_est}
 \alias{asmnl_est}
-\title{Easy Alternative Specific MNL}
+\title{Easy Alternative-Specific MNL (Deprecated)}
 \usage{
-asmnl_est(formula, data, id, alt, choice, testdata)
+asmnl_est(formula, data, id, alt, choice, testdata = NULL)
 }
 \arguments{
-\item{formula}{An object with a saved formula. The formula is represented by
-a DV on the left side separated from the IVs on the right side by a
-tilde (\code{~}). The IVs are further separated by having choice-specific 
-IVs on the left and the case-specific IVs on the right, separated by a 
-vertical line (\code{|}).}
+\item{formula}{A model formula for \code{mlogit}, typically of the form
+\code{choice ~ alt_specific_vars | case_specific_vars}.}
 
-\item{data}{A data frame containing the training data choice observations 
-in long format}
+\item{data}{Training data in long format (data frame).}
 
-\item{id}{Variable that identifies the case (in quotes)}
+\item{id}{Character string. Case identifier column name (in quotes).}
 
-\item{alt}{Variable that identifies the choice alternative (in quotes)}
+\item{alt}{Character string. Alternative identifier column name (in quotes).}
 
-\item{choice}{Variable that identifies the if \code{alt} was selected 
-(in quotes)}
+\item{choice}{Character string. Choice indicator column name (in quotes).}
 
-\item{testdata}{A data frame containing the test/holdout data choice observations 
-in long format}
+\item{testdata}{Optional holdout data in long format (data frame). If provided,
+it is converted to a \code{dfidx} object and passed as \code{newdata} to
+\code{eval_as_mnl()}.}
 }
 \value{
-Text output of model fit, odds ratio estimation results, and 
-    classification matrices for the training and holdout data.
+A fitted \code{mlogit} model (legacy behavior). Evaluation output is
+printed via \code{eval_as_mnl()}.
 }
 \description{
-This function performs alternative specific MNL using the 
-    \code{mlogit} package and provides commonly requested results.
+Deprecated. Use \code{\link{eval_as_mnl}} instead.
 }
 \details{
-For best results, the results of the function should be saved to an object
-    to be used in subsequent analyses. \cr
-REQUIRED PACKAGES:
-\itemize{
-  \item mlogit
-  \item broom
+\code{asmnl_est()} is retained for backward compatibility with older course
+materials. New code should:
+\enumerate{
+\item Create a \code{dfidx} object with \code{dfidx::dfidx(...)}.
+\item Fit a model with \code{mlogit::mlogit()}.
+\item Evaluate it with \code{eval_as_mnl()} (optionally passing \code{newdata}).
 }
+
+This deprecated wrapper fits the model and then calls \code{eval_as_mnl()}
+to print fit, coefficients (including odds ratios), and classification results.
 }
 \examples{
-myformula <- choice ~ feat + price | income
-altspec_model <- asmnl_est(formula=myformula, data=train.yog, id="id",
-                           alt="brand", choice="choice", 
-                           testdata=test.yog)
+# myformula <- choice ~ feat + price | income
+# mod <- asmnl_est(myformula, data=train_long, id="id", alt="brand",
+#                  choice="choice", testdata=test_long)
+
 }

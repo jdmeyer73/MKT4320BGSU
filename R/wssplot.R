@@ -1,36 +1,52 @@
-#' @title Scree Plot Before k-Means Clustering
-#' @description This function produces a scree plot for 1 to \emph{n} clusters
+#' @title Scree Plot Before k-Means Clustering (Deprecated)
+#' @description
+#' Deprecated. Use \code{\link{easy_km_fit}} instead.
+#'
 #' @details
-#' REQUIRED PACKAGES:
+#' This function is a thin wrapper around \code{\link{easy_km_fit}}.
+#' It returns the same WSS scree plot as \code{easy_km_fit(...)} (element
+#' \code{scree_plot}).
+#'
+#' Migration:
 #' \itemize{
-#'   \item ggplot2
+#'   \item \code{wssplot(data, nc, seed)} \eqn{\rightarrow} \code{easy_km_fit(data, vars = names(data), k_range = 1:nc, seed = seed)$scree_plot}
 #' }
-#' @param data A data frame containing only the variables on which to cluster
-#' @param nc An integer representing the maximum number of clusters to plot
-#'     (default = 15)
-#' @param seed A random number seed for reproducible results (default = 4320)
-#' @return A ggplot object
+#'
+#' @param data A data frame containing only the (numeric) variables used for clustering.
+#' @param nc Integer; maximum number of clusters to plot (default = 15).
+#' @param seed Integer; random seed for reproducible results (default = 4320).
+#'
+#' @return A ggplot object (WSS vs. k).
+#'
 #' @examples
-#' #Scree plot with default values
+#' \dontrun{
+#' # Scree plot with default values
 #' wssplot(sc.clvar)
 #'
-#' #Scree plot for up to 10 clusters and 1000 for random number seed
-#' wssplot(sc.clvar, 10, 1000)
-
-wssplot <- function(data, nc=15, seed=4320)
-{
-   require(ggplot2)
-   x <- 1:nc
-   wss <- rep(length(1:nc))
-   for (i in 1:nc)
-   {
-      set.seed(seed)
-      wss[i] <- sum(kmeans(data, centers=i, nstart=25)$withinss)
+#' # Scree plot up to 10 clusters with seed 1000
+#' wssplot(sc.clvar, nc = 10, seed = 1000)
+#' }
+#'
+#' @export
+wssplot <- function(data, nc = 15, seed = 4320) {
+   .Deprecated("easy_km_fit", package = "MKT4320BGSU")
+   
+   if (!is.data.frame(data)) {
+      stop("`data` must be a data frame.", call. = FALSE)
    }
-   wssdata <- data.frame(x,wss)
-   ggplot(wssdata, aes(x=x, y=wss)) +
-      geom_line() +
-      geom_point() +
-      labs(x="k", y="WSS") +
-      scale_x_continuous(breaks=seq(1:nc), minor_breaks = NULL)
+   if (!is.numeric(nc) || length(nc) != 1 || is.na(nc) || nc < 1) {
+      stop("`nc` must be a positive integer.", call. = FALSE)
+   }
+   
+   nc <- as.integer(nc)
+   
+   res <- easy_km_fit(
+      data         = data,
+      vars         = names(data),
+      k_range      = 1:nc,
+      standardize  = FALSE,
+      seed         = seed
+   )
+   
+   res$scree_plot
 }

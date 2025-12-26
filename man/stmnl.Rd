@@ -2,24 +2,33 @@
 % Please edit documentation in R/stmnl.R
 \name{stmnl}
 \alias{stmnl}
-\title{Easy Standard Mutlinomial Logistic Regression Results}
+\title{Easy Standard Multinomial Logistic Regression Results (Deprecated)}
 \usage{
 stmnl(model)
 }
 \arguments{
-\item{model}{A \code{multinom} object from the \code{nnet} package}
+\item{model}{A fitted \code{nnet::multinom} model.}
+}
+\value{
+Invisibly returns the \code{eval_std_mnl} result object.
 }
 \description{
-This takes a multinomial logistic regression model result from
-    the \code{multinom} function of the \code{nnet} package and returns
-    model fit and odds-ratio estimates
+Deprecated. Use \code{\link{eval_std_mnl}} instead.
 }
 \details{
-REQUIRED PACKAGES:
+This function is a thin wrapper around \code{\link{eval_std_mnl}} kept for
+backward compatibility. It prints model-fit statistics and the coefficient
+table, similar to the legacy output.
+
+Migration:
 \itemize{
-  \item broom
+\item \code{stmnl(model)} \eqn{\rightarrow} \code{eval_std_mnl(model)}
 }
 }
 \examples{
+\dontrun{
+# model <- nnet::multinom(y ~ x1 + x2, data = mydata, model = TRUE, trace = FALSE)
 stmnl(model)
+}
+
 }

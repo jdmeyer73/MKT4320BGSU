@@ -1,170 +1,70 @@
-#' @title Randomization check for A/B Testing
-#' @description This function checks if the characteristics/covariates used for
-#'     uplift modeling from an A/B Test were randomly assigned to the test and
-#'     control groups.
+#' Randomization check for A/B testing (deprecated)
+#'
+#' @description
+#' `rcheck()` is deprecated and will be removed in a future release.
+#' Use [rand_check()] instead.
+#'
 #' @details
-#' REQUIRED PACKAGES:
-#' \itemize{
-#'   \item \code{fastDummies}
-#'   \item \code{htmlTable} (if \code{nice="ht"} option used)
-#'   \item \code{flextable} (if \code{nice="ft"} option used)
-#' }
-#' @param data The name of the data frame containing the treatment variable and
-#'     the covariates.
-#' @param treatment The variable name identifying the treatment variable. Must 
-#'     be in quotations.
-#' @param outcome The name or names of the variables that identifies the 
-#'     outcome variables. Default is \code{NULL}. Must be in quotations.
-#' @param nice Format for the output
-#' \itemize{
-#' \item \code{"no"} for standard output
-#' \item \code{"ft"} for output using package \code{flextable}
-#' \item \code{"ht"} for output using package \code{htmlTable}
-#' }
-#' @return A table containing the results of the randomization ehck
+#' This function is a thin wrapper around [rand_check()] for backward
+#' compatibility.
+#'
+#' **Migration notes**
+#' - `nice = "ft"`  -> `ft = TRUE`
+#' - `nice = "no"`  -> `ft = FALSE`
+#' - `nice = "ht"`  -> no longer supported; this wrapper returns the plain data
+#'   frame (like `nice="no"`) with a warning.
+#' - `outcome` is ignored by [rand_check()], but this wrapper will still remove
+#'   `outcome` columns before determining the covariates to check.
+#'
+#' @param data Data frame containing the treatment variable and covariates.
+#' @param treatment Character string; name of the treatment indicator variable.
+#' @param outcome Optional character vector of outcome variable names to exclude
+#'   from the balance checks (legacy behavior).
+#' @param nice Output format: `"no"` (data frame), `"ft"` (flextable),
+#'   `"ht"` (deprecated legacy option; no longer supported).
+#'
+#' @return
+#' A data frame (for `nice="no"` or `nice="ht"`) or a `flextable` object (for
+#' `nice="ft"`), matching the legacy intent as closely as possible.
+#'
+#' @seealso [rand_check()]
+#' @export
+#'
 #' @examples
-#' rcheck(email.camp.w, "promotion", c("visit", "spend"), nice="ft")
-
-
-rcheck <- function(data, treatment, outcome=NULL, nice=c("no","ft", "ht")) {
-   require(fastDummies)
-   if (nice=="ht") {
-      require(htmlTable)
-   }
-   else if (nice=="ft") {
-      require(flextable)
-   }
+#' \dontrun{
+#' rcheck(email.camp.w, "promotion", outcome = "buy", nice = "ft")
+#' }
+rcheck <- function(data, treatment, outcome = NULL, nice = c("no", "ft", "ht")) {
    
-   # Function for column standard deviations
-   colSdColMeans <- function(x, na.rm=TRUE) {
-      if (na.rm) {
-         n <- colSums(!is.na(x)) # thanks @flodel
-      } else {
-         n <- nrow(x)
-      }
-      colVar <- colMeans(x*x, na.rm=na.rm) - (colMeans(x, na.rm=na.rm))^2
-      return(sqrt(colVar * n/(n-1)))
+   .Deprecated("rand_check", package = "MKT4320BGSU")
+   
+   nice <- match.arg(nice)
+   
+   # Legacy: remove outcome variables (if provided)
+   if (!is.null(outcome) && length(outcome) > 0) {
+      if (!is.character(outcome)) stop("`outcome` must be a character vector (variable names).")
+      keep <- setdiff(names(data), outcome)
+      data <- data[, keep, drop = FALSE]
    }
    
-   # Remove outcome variables if present
+   # Legacy behavior: check *all remaining* covariates (excluding treatment itself)
+   covariates <- setdiff(names(data), treatment)
    
-   if (length(outcome)>0) {
-      data <- data[,!(colnames(data) %in% outcome)]
+   if (length(covariates) == 0) {
+      stop("No covariates available to check after excluding `treatment` (and `outcome`, if provided).")
    }
    
-   # Check treatment variable and recode to 0,1
-   if (length(table(data[[treatment]]))!=2) {
-      error <- "The treatment variable must have two levels only."
-      stop(error)
-   }
-   else {
-      if (class(data[[treatment]]) %in% c("factor", "character")) {
-         if (apply(data,2,function(x) {all(x %in% c("Yes", "No"))})[[treatment]]) {
-            data[[treatment]] <- ifelse(data[[treatment]]=="Yes",1,0)
-         }
-         else {
-            error <- 'The treatment variable must be either:\n  (1) numeric variable coded as (0,1);\n  (2) factor/character variable coded as ("Yes","No"); or\n  (3) logical variable.'
-            stop(error)
-         }
-      }
-      else if (class(data[[treatment]])=="logical") {
-         data[[treatment]] <- ifelse(data[[treatment]]==TRUE,1,0)
-      }
-      else if (class(data[[treatment]]) %in% c("integer", "numeric")) {
-         if (apply(data,2,function(x) {all(x %in% 0:1)})[[treatment]]) {
-            data[[treatment]] <- data[[treatment]]
-         }
-         else {
-            error <- 'The treatment variable must be either:\n  (1) numeric variable coded as (0,1);\n  (2) factor/character variable coded as ("Yes","No"); or\n  (3) logical variable.'
-            stop(error)
-         }
-      }
-      else {
-         error <- 'The treatment variable must be either:\n  (1) numeric variable coded as (0,1);\n  (2) factor/character variable coded as ("Yes","No"); or\n  (3) logical variable.'
-         stop(error)
-      }
+   if (identical(nice, "ht")) {
+      warning('`nice = "ht"` is no longer supported. Returning a plain data frame instead.')
    }
    
-   # Get character columns
-   char_cols <- sapply(data, class)
-   char_cols <- char_cols[char_cols %in% c("factor", "character")]
-   char_cols <- names(char_cols)
+   ft <- identical(nice, "ft")
    
-   # Get number of factor/character levels
-   data.colnames <- names(data)
-   fact.rows <- 0
-   for (i in 1:length(data.colnames)) {
-      if (class(data[[i]])=="factor") {
-         add <- length(levels(data[[i]]))
-         fact.rows <- fact.rows + add
-      }
-      else if (class(data[[i]])=="character") {
-         add <- length(unique(data[[i]]))
-         fact.rows <- fact.rows + add
-      }
-   }
-   
-   # Create Dummies using fastDummies
-   data <- data.frame(dummy_cols(data))
-   
-   # Remove character/factor columns
-   data <- data[,!(colnames(data) %in% char_cols)]
-   
-   # Extract treatment variable and remove treatment from data
-   data.Treat <- data[[treatment]]
-   data <- data[,!(colnames(data) == treatment)]
-   # Matrix of covariates
-   data.X <- model.matrix(~ -1 + ., data)
-   all.rows <- length(colnames(data))
-   num.rows <- all.rows - fact.rows
-   fact.rows <- num.rows + 1
-   rand.check <- data.frame(
-      variable = colnames(data.X),
-      treatment_mean = round(colMeans(data.X[data.Treat==1,]),3),
-      control_mean = round(colMeans(data.X[data.Treat==0,]),3),
-      sd = round(colSdColMeans(data.X),3),
-      scale_mean_diff = round((colMeans(data.X[data.Treat==1,]) - colMeans(data.X[data.Treat==0,]))/colSdColMeans(data.X),3),
-      p_val=0
+   rand_check(
+      data = data,
+      treatment = treatment,
+      covariates = covariates,
+      ft = ft,
+      digits = 3
    )
-   
-   for(i in 1:num.rows) {
-      rand.check[i,6] <- round(t.test(data.X[,i] ~ data.Treat)$p.value,3)
-   }
-   for(i in fact.rows:all.rows) {
-      rand.check[i,6] <- round(prop.test(c(sum(data.X[data.Treat==1,i]),
-                                           sum(data.X[data.Treat==0,i])),
-                                         c(sum(data.Treat==1),
-                                           sum(data.Treat==0)))$p.value,3)
-   }
-   
-   if (nice=="ht") {
-      header <- c("Variable", "Mean<br>(Treatment)", "Mean<br>(Control)",
-                  "SD", "Scaled Mean<br>Difference", "p-value")
-      rand.check <- addHtmlTableStyle(rand.check,
-                                      css.cell="padding-left: 1em; 
-                                    padding-right: 1em;")
-      rand.check <- htmlTable(rand.check,
-                              rnames=FALSE,
-                              header=header)
-   }
-   else if (nice=="ft") {
-      rand.check <- flextable(rand.check) %>%
-         set_header_labels(variable="Variable",
-                           treatment_mean="Treatment",
-                           control_mean="Control",
-                           sd="SD",
-                           scale_mean_diff="Scaled Mean Difference",
-                           p_val="p-value") %>%
-         add_header_row(values=c("Variable","Mean", "Mean", "SD",
-                                 "Scaled Mean Difference", "p-value")) %>%
-         merge_h(part="header") %>%
-         merge_v(part="header") %>%
-         flextable::align(align="center", part="header") %>%
-         flextable::valign(valign="bottom", part="header") %>%
-         bold(bold=TRUE, part="header") %>%
-         padding(padding.top=1, padding.bottom = 1, part="body")
-   }
-   
-   return(rand.check)
-   
 }

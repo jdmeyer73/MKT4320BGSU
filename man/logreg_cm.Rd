@@ -2,37 +2,45 @@
 % Please edit documentation in R/logreg_cm.R
 \name{logreg_cm}
 \alias{logreg_cm}
-\title{Classification Matrix and Statistics for Binary Logistic Regression}
+\title{(Deprecated) Classification Matrix for Binary Logistic Regression}
 \usage{
 logreg_cm(MOD, DATA, POSITIVE, CUTOFF = 0.5)
 }
 \arguments{
-\item{MOD}{The saved results of a binary logistic regression glm() call}
+\item{MOD}{A fitted binary logistic regression \code{glm} object.}
 
-\item{DATA}{The name of the data frame for which the classification matrix
-should be produced (i.e., training data, holdout data, etc.)}
+\item{DATA}{A data frame for which the classification matrix should be produced.}
 
-\item{POSITIVE}{The level of the factor variable that is "true" or a
-"success"; must be in quotations}
+\item{POSITIVE}{The level representing the positive outcome.}
 
-\item{CUTOFF}{Cutoff threshold for predicted success/failure (default = 0.5)}
+\item{CUTOFF}{Probability cutoff for classification (default = 0.5).}
 }
 \value{
-Classification matrix and statistics
+Invisibly returns the result from \code{\link{classify_logistic}}.
 }
 \description{
-This function accepts a binary logistic regression - glm() -
-   object and returns the classification matrix and associated statistics.
+Deprecated. Use \code{\link{classify_logistic}} instead.
 }
 \details{
-REQUIRED PACKAGES:
+\strong{Deprecated.} This function is retained for backward compatibility.
+It forwards to \code{\link{classify_logistic}} using legacy arguments and
+prints results to the console, matching prior behavior.
+
+Migration notes:
 \itemize{
-  \item caret
+\item \code{MOD} maps directly to \code{MOD}.
+\item \code{DATA} maps directly to \code{DATA}.
+\item \code{POSITIVE} maps directly to \code{POSITIVE}.
+\item \code{CUTOFF} maps directly to \code{CUTOFF}.
+\item The new function supports optional test data, flextable output,
+and additional statistics.
 }
 }
 \examples{
-model <- glm(buy ~ age + gender, train, family="binomial")
-
+\dontrun{
+model <- glm(buy ~ age + gender, train, family = "binomial")
 logreg_cm(model, train, "Yes")
 logreg_cm(model, train, "Yes", 0.6)
+}
+
 }

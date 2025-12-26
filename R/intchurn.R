@@ -1,39 +1,25 @@
-#' ISP Churn
+#' Internet Service Provider (ISP) Churn
 #'
-#' Data on a sample of about 4800 customers that were customers of an
-#'     internet service provider (ISP) in the previous month. However, some
-#'     of those customers churned within the last month. \cr
-#'     \cr
-#'     \strong{Used in Lab Assignment 4}
+#' Customer data from an internet service provider indicating whether customers
+#' churned in the most recent month.
 #'
-#' @usage data(intchurn)
-#' @format
-#' A data frame with 4835 rows and 13 columns:
+#' @docType data
+#' @format A data frame with 4,835 rows and 13 variables:
 #' \describe{
-#'   \item{\code{churn}}{Factor variable for home ownership with two levels
-#'       (\emph{Yes} if the customer churned, \emph{No} otherwise)}
-#'   \item{\code{tenure}}{Length of time customer has been with the ISP,
-#'       in months}
-#'   \item{\code{bill}}{Billed amount in the previous month, in dollars}
-#'   \item{\code{numsvcs}}{Number of additional services the customer
-#'       subscribes to from the ISP}
-#'   \item{\code{senior}}{Factor variable with two levels (\emph{Yes} if the
-#'       customer is a senior citizen, \emph{No} otherwise)}
-#'   \item{\code{gender}}{Factor variable with two levels (\emph{Male} and
-#'       \emph{Female})}
-#'   \item{\code{married}}{Factor variable with two levels (\emph{Yes} if the
-#'       customer is married, \emph{No} otherwise)}
-#'   \item{\code{dep}}{Factor variable with two levels (\emph{Yes} if the
-#'       customer has dependents, \emph{No} otherwise)}
-#'   \item{\code{inttype}}{Factor variable with two levels indicating the
-#'       customer's type of internet service (\emph{DSL} and \emph{Fiber})}
-#'   \item{\code{contract}}{Factor variable with three levels indicating the
-#'       contract type (\emph{Monthly}, \emph{One year}, and \emph{Two year})}
-#'   \item{\code{ebill}}{Factor variable with two levels (\emph{Yes} if the
-#'       customer uses electronic billing, \emph{No} otherwise)}
-#'   \item{\code{payment}}{Factor variable with four levels indicating how
-#'       payments are made (\emph{Bank transfer}, \emph{Credit card},
-#'       \emph{Bill pay}, and \emph{Check})}
+#'   \item{churn}{Factor. Customer churned in the last month (\code{Yes}, \code{No}).}
+#'   \item{tenure}{Integer. Length of customer relationship in months.}
+#'   \item{bill}{Numeric. Billed amount in the previous month (U.S. dollars).}
+#'   \item{numsvcs}{Integer. Number of additional services subscribed.}
+#'   \item{senior}{Factor. Senior citizen indicator (\code{Yes}, \code{No}).}
+#'   \item{gender}{Factor. Gender (\code{Male}, \code{Female}).}
+#'   \item{married}{Factor. Married indicator (\code{Yes}, \code{No}).}
+#'   \item{dep}{Factor. Has dependents (\code{Yes}, \code{No}).}
+#'   \item{inttype}{Factor. Internet service type (\code{DSL}, \code{Fiber}).}
+#'   \item{contract}{Factor. Contract type
+#'     (\code{Monthly}, \code{One year}, \code{Two year}).}
+#'   \item{ebill}{Factor. Uses electronic billing (\code{Yes}, \code{No}).}
+#'   \item{payment}{Factor. Payment method
+#'     (\code{Bank transfer}, \code{Credit card}, \code{Bill pay}, \code{Check}).}
 #' }
-#' @source Adapted from \url{https://www.kaggle.com/datasets/blastchar/telco-customer-churn}
+#' @source Adapted from a Kaggle Telco Customer Churn dataset.
 "intchurn"

@@ -2,32 +2,31 @@
 % Please edit documentation in R/abate.R
 \name{abate}
 \alias{abate}
-\title{Average Treatment Effect for A/B Testing}
+\title{Average Treatment Effect for A/B Testing (Deprecated)}
 \usage{
 abate(model, treatment)
 }
 \arguments{
-\item{model}{An existing linear regression (\code{lm}) object containing all
-control variables and the treatment variable.}
+\item{model}{A fitted linear regression model of class \code{lm} that includes
+the treatment variable and (optionally) covariates.}
 
-\item{treatment}{The treatment variable name Must be in quotations.}
+\item{treatment}{Character string. Name of the treatment variable (in quotes).}
 }
 \value{
-A \code{flextable} object
+A \code{flextable} (same as \code{easy_ab_ate(..., ft = TRUE)}).
 }
 \description{
-This function uses linear regression to calculate the average
-     treatment effects both without controls and with controls. The function
-     returns a \code{flextable} object.
+Deprecated. Use \code{\link{easy_ab_ate}} instead.
 }
 \details{
-REQUIRED PACKAGES:
-\itemize{
-  \item \code{dplyr}
-  \item \code{gtsummary}
-  \item \code{flextable}
-}
+\code{abate()} is retained for backward compatibility with older course
+materials. New code should use \code{easy_ab_ate()}.
+
+This wrapper forwards arguments to \code{easy_ab_ate()} with \code{ft = TRUE}.
 }
 \examples{
-abate(visit, "promotion")
+# m <- lm(y ~ promotion + age + income, data = df)
+# abate(m, "promotion")            # deprecated
+# easy_ab_ate(m, "promotion")      # preferred
+
 }

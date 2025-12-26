@@ -2,32 +2,37 @@
 % Please edit documentation in R/logreg_roc.R
 \name{logreg_roc}
 \alias{logreg_roc}
-\title{ROC Curve}
+\title{(Deprecated) ROC Curve for Binary Logistic Regression}
 \usage{
 logreg_roc(MOD, DATA)
 }
 \arguments{
-\item{MOD}{The saved results of a binary logistic regression glm() call}
+\item{MOD}{A fitted binary logistic regression \code{glm} object.}
 
-\item{DATA}{The name of the data frame for which the classification matrix
-should be produced (i.e., training data, holdout data, etc.)}
+\item{DATA}{A data frame for ROC computation (e.g., training data).}
 }
 \value{
-ggplot2 object
+A single ROC \code{ggplot} object (invisibly returned).
 }
 \description{
-This function accepts a binary logistic regression - glm() -
-   object and returns the ROC curve.
+Deprecated. Use \code{\link{roc_logistic}} instead.
 }
 \details{
-REQUIRED PACKAGES:
+\strong{Deprecated.} This function is retained for backward compatibility.
+It forwards to \code{\link{roc_logistic}} and returns a single ROC curve
+for the provided data set.
+
+Migration notes:
 \itemize{
-  \item pROC
-  \item ggplot2
+\item \code{MOD} maps directly to \code{MOD}.
+\item \code{DATA} maps directly to \code{DATA}.
+\item The new function supports an optional second data set and custom labels.
 }
 }
 \examples{
-model <- glm(buy ~ age + gender, train, family="binomial")
-
+\dontrun{
+model <- glm(buy ~ age + gender, train, family = "binomial")
 logreg_roc(model, train)
+}
+
 }

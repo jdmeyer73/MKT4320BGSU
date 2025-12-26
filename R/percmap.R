@@ -1,151 +1,65 @@
-#' @title Easy Perceptual and Joint Space Maps from PCA
-#' @description This function produces perceptual or joint spaced maps based
-#'     on the first two principal components of a PCA
+#' @title Perceptual / Joint Space Map from PCA (Deprecated)
+#'
+#' @description
+#' Deprecated. Use \code{\link{easy_pca_maps}} instead.
+#'
 #' @details
-#' REQUIRED PACKAGES:
+#' This function is kept for backward compatibility. It produces a single
+#' perceptual or joint space map using the first two principal components.
+#'
+#' Migration:
 #' \itemize{
-#'   \item ggplot2
-#'   \item dplyr
+#'   \item \code{percmap(data, group)} \eqn{\rightarrow}
+#'   \code{easy_pca_maps(data, vars, group, comp = 2)$plots[[1]]}
+#'   \item \code{percmap(data, group, pref)} \eqn{\rightarrow}
+#'   \code{easy_pca_maps(data, vars, group, comp = 2, pref = pref)$plots[[1]]}
 #' }
-#' @param data A data frame containing the variables on which to perform the
-#'     principal components analysis. Can include a preference variable.
-#' @param group Name of the grouping variable. Must be in quotations. 
-#' @param pref Name of the preference variable. Must be in quotations. Can be 
-#'     excluded if no preference variable exists.
-#' @return
-#' \itemize{ 
-#'   \item If a \code{pref} variable is not included, returns a perceptual map
-#'   \item If a \code{pref} variable is included, returns a joint space map
-#' }
+#'
+#' @param data A data frame containing attribute variables and a grouping variable.
+#' @param group Character string; name of the grouping variable.
+#' @param pref Optional character string; name of a numeric preference variable.
+#'
+#' @return A \code{ggplot} perceptual (or joint space) map.
+#'
 #' @examples
-#' #Perceptual map
-#' pmdata <- greekbrands %>%
-#'    select(perform, leader, fun, serious bargain, value, brand)
-#' percmap(pmdata, group="brand")
-#' 
-#' #Joint Space map
-#' jsmdata <- greekbrands %>%
-#'    select(perform, leader, fun, serious bargain, value, pref, brand)
-#' percmap(pmdata, group="brand", pref="pref")
-
+#' \dontrun{
+#' percmap(mydata, group = "brand")
+#' percmap(mydata, group = "brand", pref = "liking")
+#' }
+#'
+#' @export
 percmap <- function(data, group, pref) {
-   require(dplyr)
-   require(ggplot2)
-   grpcnum <- grep(group, colnames(data))
-   sum <- data %>% 
-      group_by(data[grpcnum]) %>% 
-      summarise_all(mean)
-   sum <- as.data.frame(sum)
-   rownames(sum) <- sum[,1]
-   sum <- sum[,2:ncol(sum)]
-   if(missing(pref)) {
-      dsum <- sum
-   } else {
-      prefcnum <- grep(pref,colnames(sum))
-      dsum <- sum[-prefcnum]
-      pref <- sum[prefcnum] %>%
-         mutate_all(~(scale(.)))
+   .Deprecated("easy_pca_maps", package = "MKT4320BGSU")
+   
+   if (!is.data.frame(data)) stop("`data` must be a data frame.", call. = FALSE)
+   if (missing(group)) stop("`group` must be supplied.", call. = FALSE)
+   
+   # legacy behavior: use all numeric vars except group/pref
+   drop <- c(group, if (!missing(pref)) pref)
+   vars <- names(data)[vapply(data, is.numeric, logical(1))]
+   vars <- setdiff(vars, drop)
+   
+   if (length(vars) < 2) {
+      stop("Not enough numeric variables to create a perceptual map.", call. = FALSE)
    }
-   pcaobj <- prcomp(dsum, scale=TRUE, rank=2)
-   PC1Var <- round((pcaobj$sdev[1]^2)/length(pcaobj$sdev),4)*100
-   PC2Var <- round((pcaobj$sdev[2]^2)/length(pcaobj$sdev),4)*100
-   rvarm <- varimax(pcaobj$rotation, normalize=FALSE)
-   acoord <- data.frame(pcaobj$rotation%*%rvarm$rotmat)
-   colnames(acoord) <- c("PC1", "PC2")
-   dsumstd <- dsum %>%
-      mutate_all(~(scale(.)))
-   PC1 <- as.matrix(dsumstd[,1:ncol(dsumstd)])%*%matrix(acoord[,1])
-   PC2 <- as.matrix(dsumstd[,1:ncol(dsumstd)])%*%matrix(acoord[,2])
-   bcoord <- data.frame(PC1,PC2)
-   bcmax <- max(abs(bcoord))
-   bcoord$hj <- ifelse(bcoord$PC1>0,
-                       ifelse(bcoord$PC1>bcmax*.75, 1.15,-.2),
-                       ifelse(bcoord$PC1<(-bcmax*.75), -.2, 1.15))
-   upscale <- (bcmax*2)/(max(abs(acoord))*2)
-   acoord <- acoord*(upscale*.75)
-   acoord$dist <- acoord$PC1^2 + acoord$PC2^2
-   amax <- max(acoord$dist)
-   acoord$an <- atan2(acoord$PC2,acoord$PC1)*57.29577
-   acoord <- acoord %>%
-      mutate(ang=case_when(an>45 & an<=135 ~ 45,
-                           abs(an)>135 ~ 0,
-                           an>(-135) & an<=(-45) ~ 45,
-                           abs(an)<45 ~ 0),
-             vj=case_when(an>45 & an<=135 ~ -.2,
-                           abs(an)>135 ~ 0,
-                           an>(-135) & an<=(-45) ~ 0,
-                           abs(an)<45 ~ 1),
-             hj=case_when(an>45 & an<=135 ~ 0,
-                           abs(an)>135 ~ 1,
-                           an>(-135) & an<=(-45) ~ 1,
-                           abs(an)<45 ~ 0))
-  if(missing(pref)) {
-     ggplot() +
-        geom_hline(yintercept=0) + geom_vline(xintercept=0) +
-        geom_segment(data=acoord,
-                     aes(x=0, y=0, xend=PC1, yend=PC2),
-                     size=1, color="red4", 
-                     arrow=arrow(ends="last", length=unit(0.25, "cm"))) +
-        geom_text(data=acoord, aes(x=PC1, y=PC2), 
-                  label=rownames(acoord), color="red4", size=5,  
-                  angle=acoord$ang, vjust=acoord$vj, hjust=acoord$hj) +
-        geom_point(data=bcoord, aes(x=PC1, y=PC2), color="navy", size=2) +
-        geom_text(data=bcoord, aes(x=PC1, y=PC2), color="navy", 
-                  label=rownames(bcoord), hjust=bcoord$hj, size=5, angle=45) +
-        theme(aspect.ratio=1, axis.ticks=element_blank(), axis.text=element_blank(),
-              panel.background=element_rect(fill="white", color="black")) +
-        scale_x_continuous(limits=c(-bcmax,bcmax),
-                           expand=c(0.07,0.07)) +
-        scale_y_continuous(limits=c(-bcmax,bcmax),
-                           expand=c(0.07,0.07)) +
-        labs(x=paste0("PC1 (",PC1Var,"%)"), y=paste0("PC2 (",PC2Var,"%)"))
+   
+   if (missing(pref)) {
+      res <- easy_pca_maps(
+         data = data,
+         vars = vars,
+         group = group,
+         comp = 2
+      )
    } else {
-      pcoord <- cbind(pref,PC1,PC2) %>%
-         mutate(PC1=pref*PC1,
-                PC2=pref*PC2) %>%
-         select(PC1,PC2) %>%
-         summarise_all(mean)
-      pscale <- sqrt(amax/(pcoord$PC1^2 + pcoord$PC2^2))
-      pcoord <- pcoord*pscale
-      pcoord$an <- atan2(pcoord$PC2,pcoord$PC1)*57.29577
-      pcoord <- pcoord %>%
-         mutate(ang=case_when(an>45 & an<=135 ~ 45,
-                              abs(an)>135 ~ 0,
-                              an>(-135) & an<=(-45) ~ 45,
-                              abs(an)<45 ~ 0),
-                vj=case_when(an>45 & an<=135 ~ -.2,
-                             abs(an)>135 ~ 0,
-                             an>(-135) & an<=(-45) ~ 0,
-                             abs(an)<45 ~ 1),
-                hj=case_when(an>45 & an<=135 ~ 0,
-                             abs(an)>135 ~ 1,
-                             an>(-135) & an<=(-45) ~ 1,
-                             abs(an)<45 ~ 0))
-      ggplot() +
-         geom_hline(yintercept=0) + geom_vline(xintercept=0) +
-         geom_segment(data=pcoord,
-                      aes(x=0, y=0, xend=PC1, yend=PC2),
-                      size=1, color="darkgreen",
-                      arrow=arrow(ends="last", length=unit(0.25, "cm"))) +
-         geom_text(data=pcoord, aes(x=PC1, y=PC2),
-                   label="Pref", color="darkgreen", size=5, 
-                   angle=pcoord$ang, vjust=pcoord$vj, hjust=pcoord$hj) +
-         geom_segment(data=acoord,
-                      aes(x=0, y=0, xend=PC1, yend=PC2),
-                      size=1, color="red4", 
-                      arrow=arrow(ends="last", length=unit(0.25, "cm"))) +
-         geom_text(data=acoord, aes(x=PC1, y=PC2), 
-                   label=rownames(acoord), color="red4", size=5,  
-                   angle=acoord$ang, vjust=acoord$vj, hjust=acoord$hj) +
-         geom_point(data=bcoord, aes(x=PC1, y=PC2), color="navy", size=2) +
-         geom_text(data=bcoord, aes(x=PC1, y=PC2), color="navy", 
-                   label=rownames(bcoord), hjust=bcoord$hj, size=5, angle=45) +
-         theme(aspect.ratio=1, axis.ticks=element_blank(), axis.text=element_blank(),
-               panel.background=element_rect(fill="white", color="black")) +
-         scale_x_continuous(limits=c(-bcmax,bcmax),
-                            expand=c(0.07,0.07)) +
-         scale_y_continuous(limits=c(-bcmax,bcmax),
-                            expand=c(0.07,0.07)) +
-         labs(x=paste0("PC1 (",PC1Var,"%)"), y=paste0("PC2 (",PC2Var,"%)"))
+      res <- easy_pca_maps(
+         data = data,
+         vars = vars,
+         group = group,
+         comp = 2,
+         pref = pref
+      )
    }
+   
+   # preserve legacy: return single plot
+   res$plots[[1]]
 }

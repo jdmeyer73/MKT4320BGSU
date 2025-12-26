@@ -1,12 +1,48 @@
 Package: MKT4320BGSU
 Type: Package
-Title: Functions and Data for MKT 4320
-Version: 0.1.1
-Author: Jeffrey Meyer
-Maintainer: Jeffrey Meyer <jdmeyer@bgsu.edu>
-Description: Contains user-defined functions and data for use in BGSU's
-    MKT 4320 (Marketing Analytics) course.
-License: 
+Title: Teaching and Applied Marketing Analytics Tools
+Version: 0.9.0
+Authors@R: 
+    person("Jeffrey", "Meyer", email = "jdmeyer@bgsu.edu", role = c("aut", "cre"))
+Description: 
+    Functions and datasets for teaching and applied research in marketing
+    analytics, including clustering, PCA, classification, and choice models.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.1
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports:
+    broom,
+    caret,
+    cluster,
+    cowplot,
+    dendextend,
+    dfidx,
+    dplyr,
+    effects,
+    fastDummies,
+    flextable,
+    ggeffects,
+    ggplot2,
+    ggrepel,
+    gtsummary,
+    insight,
+    mlogit,
+    NbClust,
+    nnet,
+    officer,
+    pROC,
+    rlang,
+    rstatix,
+    RVAideMemoire,
+    scales,
+    stats,
+    stringr,
+    tidyr,
+    utils
+Suggests:
+    Hmisc,
+    knitr,
+    rmarkdown,
+    testthat

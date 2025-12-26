@@ -5,28 +5,27 @@
 \alias{candydata}
 \title{Candy Sales}
 \format{
-A data frame with 135 rows and 7 columns:
+A data frame with 135 rows and 7 variables:
 \describe{
-  \item{\code{ad}}{Indicator if the candy was in the weekly ad (Yes/No)}
-  \item{\code{endcap}}{Indicator if the candy was on an endcap (Yes/No)}
-  \item{\code{unitssold}}{Weekly units sold in 000s}
-  \item{\code{weeknum}}{Sequential week number from February 2010 on}
-  \item{\code{price}}{Price for the week, in dollars}
-  \item{\code{date}}{Date of start of week}
-  \item{\code{month}}{Factor variable with 12 levels (abbreviated month name)}
+\item{ad}{Factor or character. Indicator for weekly advertising
+(\code{Yes}, \code{No}).}
+\item{endcap}{Factor or character. Indicator for endcap display
+(\code{Yes}, \code{No}).}
+\item{unitssold}{Numeric. Weekly units sold, measured in thousands.}
+\item{weeknum}{Integer. Sequential week number starting in February 2010.}
+\item{price}{Numeric. Weekly price in U.S. dollars.}
+\item{date}{Date. Start date of the sales week.}
+\item{month}{Factor. Month of the year (12 levels, abbreviated names).}
 }
 }
 \source{
-Unknown
+Unknown.
 }
 \usage{
-data(candydata)
+candydata
 }
 \description{
-Weekly unit sales for a bag of candy over 135 weeks at a particular grocery
-    store, starting in February 2010. The unit sales are averaged across all
-    store locations. \cr
-    \cr
-    \strong{Used in Lab Assignment 2}
+Weekly sales and marketing data for a bag of candy sold at a grocery store,
+beginning in February 2010. Unit sales are averaged across store locations.
 }
 \keyword{datasets}

@@ -1,33 +1,42 @@
 #' Fast Food Segmentation Data
 #'
-#' Dataset containing attribute importance and respondent demographics from
-#'     BGSU students about eating fast food.
+#' Attribute importance ratings and respondent characteristics related to
+#' fast food consumption, collected from BGSU students.
 #'
-#' @usage data(ffseg)
-#' @format
-#' A data frame with 752 rows and 29 columns:
+#' @docType data
+#' @format A data frame with 752 rows and 29 variables:
 #' \describe{
-#'   \item{frequency}{How many times per week they eat fast food (categorical)}
-#'   \item{usertype}{Light vs. Heavy vs. Non}
-#'   \item{spend}{How much typically spent (categorical)}
-#'   \item{eatin}{Prefer eat-in (1) or take-out/delivery (7)}
-#'   \item{clean}{Importance of cleanliness}
-#'   \item{variety}{Importance of menu variety}
-#'   \item{quality}{Importance of food quality}
-#'   \item{location}{Importance of location}
-#'   \item{speed}{Importance of speed of service}
-#'   \item{healthy}{Importance of healthy options availability}
-#'   \item{price}{Importance of price}
-#'   \item{friendly}{Importance of employee friendliness}
-#'   \item{hours}{Importance of hours}
-#'   \item{type}{Type of fast food preferred (categorical)}
-#'   \item{live}{Where they live during the school year (categorical)}
-#'   \item{mealplan}{Whether or not they have a meal plan (yes/no)}
-#'   \item{gender}{Gender}
-#'   \item{class}{Class level (Freshman, Sophmomore, Junior, Senior)}
-#'   \item{college}{BGSU college they are apart of}
-#'   \item{bclean to bhours}{Dichotomous importance of fast food attributes}
-#'   \item{id}{Respondent id number}
+#'   \item{frequency}{Factor or ordered factor. Fast food consumption frequency per week.}
+#'   \item{usertype}{Factor. User type (\code{Light}, \code{Heavy}, \code{Non}).}
+#'   \item{spend}{Factor or ordered factor. Typical spending amount.}
+#'   \item{eatin}{Integer. Preference for eat-in versus take-out/delivery (1--7 scale).}
+#'   \item{clean}{Numeric. Importance of cleanliness (Likert-type scale).}
+#'   \item{variety}{Numeric. Importance of menu variety (Likert-type scale).}
+#'   \item{quality}{Numeric. Importance of food quality (Likert-type scale).}
+#'   \item{location}{Numeric. Importance of location (Likert-type scale).}
+#'   \item{speed}{Numeric. Importance of speed of service (Likert-type scale).}
+#'   \item{healthy}{Numeric. Importance of healthy options availability (Likert-type scale).}
+#'   \item{price}{Numeric. Importance of price (Likert-type scale).}
+#'   \item{friendly}{Numeric. Importance of employee friendliness (Likert-type scale).}
+#'   \item{hours}{Numeric. Importance of operating hours (Likert-type scale).}
+#'   \item{type}{Factor. Preferred type of fast food.}
+#'   \item{live}{Factor. Residence during the school year.}
+#'   \item{mealplan}{Factor or character. Meal plan status (\code{Yes}, \code{No}).}
+#'   \item{gender}{Factor or character. Gender.}
+#'   \item{class}{Factor. Class level (\code{Freshman}, \code{Sophomore}, \code{Junior}, \code{Senior}).}
+#'   \item{college}{Factor or character. BGSU college affiliation.}
+#'   \item{bclean}{Integer. Binary importance indicator for cleanliness (0/1).}
+#'   \item{bfriendly}{Integer. Binary importance indicator for employee friendliness (0/1).}
+#'   \item{bhealthy}{Integer. Binary importance indicator for healthy options availability (0/1).}
+#'   \item{bhours}{Integer. Binary importance indicator for operating hours (0/1).}
+#'   \item{blocation}{Integer. Binary importance indicator for location (0/1).}
+#'   \item{bprice}{Integer. Binary importance indicator for price (0/1).}
+#'   \item{bquality}{Integer. Binary importance indicator for food quality (0/1).}
+#'   \item{bspeed}{Integer. Binary importance indicator for speed of service (0/1).}
+#'   \item{bvariety}{Integer. Binary importance indicator for menu variety (0/1).}
+#'
+#'   \item{id}{Integer. Respondent identifier.}
 #' }
-#' @source Data from MKT 3200 classes
+#' @source Data from MKT 3200 classes.
+#' @keywords datasets
 "ffseg"

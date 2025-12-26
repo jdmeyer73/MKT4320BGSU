@@ -2,43 +2,48 @@
 % Please edit documentation in R/rcheck.R
 \name{rcheck}
 \alias{rcheck}
-\title{Randomization check for A/B Testing}
+\title{Randomization check for A/B testing (deprecated)}
 \usage{
 rcheck(data, treatment, outcome = NULL, nice = c("no", "ft", "ht"))
 }
 \arguments{
-\item{data}{The name of the data frame containing the treatment variable and
-the covariates.}
+\item{data}{Data frame containing the treatment variable and covariates.}
 
-\item{treatment}{The variable name identifying the treatment variable. Must 
-be in quotations.}
+\item{treatment}{Character string; name of the treatment indicator variable.}
 
-\item{outcome}{The name or names of the variables that identifies the 
-outcome variables. Default is \code{NULL}. Must be in quotations.}
+\item{outcome}{Optional character vector of outcome variable names to exclude
+from the balance checks (legacy behavior).}
 
-\item{nice}{Format for the output
-\itemize{
-\item \code{"no"} for standard output
-\item \code{"ft"} for output using package \code{flextable}
-\item \code{"ht"} for output using package \code{htmlTable}
-}}
+\item{nice}{Output format: \code{"no"} (data frame), \code{"ft"} (flextable),
+\code{"ht"} (deprecated legacy option; no longer supported).}
 }
 \value{
-A table containing the results of the randomization ehck
+A data frame (for \code{nice="no"} or \code{nice="ht"}) or a \code{flextable} object (for
+\code{nice="ft"}), matching the legacy intent as closely as possible.
 }
 \description{
-This function checks if the characteristics/covariates used for
-    uplift modeling from an A/B Test were randomly assigned to the test and
-    control groups.
+\code{rcheck()} is deprecated and will be removed in a future release.
+Use \code{\link[=rand_check]{rand_check()}} instead.
 }
 \details{
-REQUIRED PACKAGES:
+This function is a thin wrapper around \code{\link[=rand_check]{rand_check()}} for backward
+compatibility.
+
+\strong{Migration notes}
 \itemize{
-  \item \code{fastDummies}
-  \item \code{htmlTable} (if \code{nice="ht"} option used)
-  \item \code{flextable} (if \code{nice="ft"} option used)
+\item \code{nice = "ft"}  -> \code{ft = TRUE}
+\item \code{nice = "no"}  -> \code{ft = FALSE}
+\item \code{nice = "ht"}  -> no longer supported; this wrapper returns the plain data
+frame (like \code{nice="no"}) with a warning.
+\item \code{outcome} is ignored by \code{\link[=rand_check]{rand_check()}}, but this wrapper will still remove
+\code{outcome} columns before determining the covariates to check.
 }
 }
 \examples{
-rcheck(email.camp.w, "promotion", c("visit", "spend"), nice="ft")
+\dontrun{
+rcheck(email.camp.w, "promotion", outcome = "buy", nice = "ft")
+}
+}
+\seealso{
+\code{\link[=rand_check]{rand_check()}}
 }

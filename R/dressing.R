@@ -1,20 +1,17 @@
 #' Salad Dressing Sales
 #'
-#' Weekly data on the purchase of salad dressing across five locations for
-#'     two stores over about 2 years. \cr
-#'     \cr
-#' Used in Lab Assignment 9
+#' Weekly sales data for salad dressing across multiple locations and retailers
+#' over approximately two years.
 #'
-#' @usage data(dressing)
-#' @format
-#' A data frame with 1,365 rows and 5 columns:
+#' @docType data
+#' @format A data frame with 1,365 rows and 5 variables:
 #' \describe{
-#'   \item{\code{id}}{Unique location/week identifier}
-#'   \item{\code{vol}}{Units sold for the week}
-#'   \item{\code{price}}{Price for the week}
-#'   \item{\code{adv}}{Advertising level for the week}
-#'   \item{\code{store}}{Factor variable indicating the retailer (Alb = 
-#'       Albertson's; WD = Winn-Dixie)}
+#'   \item{id}{Integer or character. Unique identifier for each location--week observation.}
+#'   \item{vol}{Numeric or integer. Units sold during the week.}
+#'   \item{price}{Numeric. Price during the week.}
+#'   \item{adv}{Numeric or integer. Advertising level for the week.}
+#'   \item{store}{Factor. Retailer identifier
+#'     (\code{Alb} = Albertson's; \code{WD} = Winn-Dixie).}
 #' }
-#' @source Unknown
+#' @source Unknown.
 "dressing"

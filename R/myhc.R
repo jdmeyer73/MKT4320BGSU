@@ -1,214 +1,148 @@
-#' @title Easy Hierarchical Agglomerative Clustering
-#' @description This function performs hierarchical agglomerative clustering,
-#'     allowing the user to pick a specific number of clusters, get stopping
-#'     indices, etc.
+#' @title (Deprecated) Easy Hierarchical Agglomerative Clustering
+#' @description
+#' Deprecated. Use \code{\link{easy_hc_fit}} (fit & diagnostics) and
+#' \code{\link{easy_hc_final}} (final solution + membership) instead.
+#'
 #' @details
-#' For best results, the results of the function should be saved to an object. \cr
-#' REQUIRED PACKAGES:
+#' \strong{Deprecated.} This function is retained for backward compatibility.
+#' It forwards to \code{\link{easy_hc_fit}} for clustering/diagnostics and
+#' reconstructs legacy outputs (\code{kcount}, \code{kperc}, \code{hc}, and
+#' optionally \code{stop}) when possible.
+#'
+#' Migration notes:
 #' \itemize{
-#'   \item dendextend
-#'   \item dplyr
-#'   \item NbClust
+#'   \item \code{cuts} corresponds to selecting \code{k} later via
+#'     \code{\link{easy_hc_final}}. This legacy function supports multiple cuts
+#'     and returns multi-\code{k} count/percent tables.
+#'   \item \code{clustop="Y"} returns legacy Duda/Hart and pseudo-t^2 indices as
+#'     a data frame similar to prior behavior.
 #' }
-#' @param data A data frame containing only the variables on which to cluster
-#' @param dist Distance measure to be used for the similarity/dissimilarity
-#'     matrix. Must be in quotations. Takes one of the following values:
+#'
+#' @param data A data frame (or numeric matrix) containing only variables used for clustering.
+#' @param dist Distance measure: \code{"euc"}, \code{"euc2"}, \code{"max"}, \code{"abs"}, \code{"bin"}.
+#' @param method Linkage: \code{"ward"}, \code{"single"}, \code{"complete"}, \code{"average"}.
+#' @param cuts Optional integer vector of cluster solutions to tabulate (legacy behavior).
+#' @param clustop \code{"Y"} to return stopping indices; \code{"N"} otherwise.
+#'
+#' @return
+#' If \code{cuts} is missing:
 #' \itemize{
-#'   \item \code{dist="euc"} provides Euclidean distance
-#'   \item \code{dist="euc2"} provides Euclidean Squared distance
-#'   \item \code{dist="max"} provides Maximum distance
-#'   \item \code{dist="abs"} provides Absolute distance
-#'   \item \code{dist="bin"} provides a distance measure for a set of binary-only variables
+#'   \item returns \code{"No Cuts"} if \code{clustop="N"}
+#'   \item returns \code{list(stop = <data.frame>)} if \code{clustop="Y"}
 #' }
-#' @param method Indicates the linkage method. Must be in quotations. Takes one
-#'     of the following values:
+#'
+#' If \code{cuts} is provided:
 #' \itemize{
-#' \item \code{method="single"} provides Single linkage
-#' \item \code{method="complete"} provides Complete linkage
-#' \item \code{method="average"} provides Average linkage
-#' \item \code{method="ward"} provides Ward’s linkage
+#'   \item returns \code{list(kcount = ..., kperc = ..., hc = ...)} if \code{clustop="N"}
+#'   \item returns \code{list(kcount = ..., kperc = ..., hc = ..., stop = ...)} if \code{clustop="Y"}
 #' }
-#' @param cuts Indicates how many clusters are desired for the solution (optional).
-#' @param clustop Indicates if stopping indices are wanted. Must be in quotations.
-#'     Takes one of the following values:
-#' \itemize{
-#' \item \code{clustop="Y"} if indices are wanted
-#' \item \code{clustop="N"} if indices are not wanted
-#' }
-#' @return A list containing the following objects:
-#' \itemize{
-#'   \item if \code{cuts} are provided:
-#'       \itemize{
-#'          \item Dendrogram of the top \emph{n} branches, where \emph{n} is
-#'              the highest number of clusters provided by \code{cuts}.
-#'              Displayed automatically and not saved to the list object.
-#'          \item \code{$kcount} is a table of cluster sizes
-#'          \item \code{$kperc} is table of cluster size percentages
-#'          \item \code{$hc} is the \code{hclust} object created
-#'          \item \code{$stop} is a table of stopping indices for 1 to 10 clusters
-#'               if \code{clustop="Y"}
-#'       }
-#'   \item if \code{cuts} are not provided:
-#'       \itemize{
-#'          \item Dendrogram with all branches.  Displayed automatically and
-#'              not saved to the list object.
-#'          \item \code{$stop} is a table of stopping indices for 1 to 10 clusters
-#'               if \code{clustop="Y"}
-#'       }
-#' }
+#'
 #' @examples
-#' #No cuts with stopping indices
-#' eg1 <- myhc(sc.clvar, "euc", "ward", "Y")
+#' \dontrun{
+#' # No cuts with stopping indices
+#' eg1 <- myhc(sc.clvar, "euc", "ward", clustop = "Y")
 #' eg1$stop
 #'
-#' #One cut without stopping indices
-#' eg2 <- myhc(sc.clvar, "max", "ward", cuts=5, "N")
+#' # One cut without stopping indices
+#' eg2 <- myhc(sc.clvar, "max", "ward", cuts = 5, clustop = "N")
 #' eg2$kcount
 #' eg2$kperc
 #'
-#' #Multiple cuts without stopping indices
-#' eg3 <- myhc(sc.clvar, "abs", "ward", cuts=c(2,3,4,6), "N")
+#' # Multiple cuts without stopping indices
+#' eg3 <- myhc(sc.clvar, "abs", "ward", cuts = c(2, 3, 4, 6), clustop = "N")
 #' eg3$kcount
 #' eg3$kperc
-
+#' }
+#'
+#' @export
 myhc <- function(data,
-                   dist=c("euc", "euc2", "max", "abs", "bin"),
-                   method=c("ward", "single", "complete", "average"),
-                   cuts,
-                   clustop=c("N","Y")) {
-   require(dendextend)
-   require(dplyr)
-   sortfreq <- function(t) {
-      for (tnum in 1:length(t)) {
-         t[[tnum]]$Freq <- sort(t[[tnum]]$Freq, decreasing=TRUE)
-      }
-      return(t)
+                 dist = c("euc", "euc2", "max", "abs", "bin"),
+                 method = c("ward", "single", "complete", "average"),
+                 cuts,
+                 clustop = c("N", "Y")) {
+   
+   .Deprecated("easy_hc_fit")
+   
+   dist <- match.arg(dist)
+   method <- match.arg(method)
+   clustop <- match.arg(clustop)
+   
+   # ---- coerce input like legacy code tolerated ----
+   if (is.matrix(data)) data <- as.data.frame(data)
+   if (!is.data.frame(data)) stop("`data` must be a data frame or numeric matrix.", call. = FALSE)
+   
+   # ensure column names for vars
+   if (is.null(names(data)) || any(!nzchar(names(data)))) {
+      names(data) <- paste0("V", seq_len(ncol(data)))
    }
-   #
-   # Create lookup for distance method and distance title
-   #
-   distdf <- data.frame(inp=c("euc", "euc2", "max", "abs", "bin"),
-                        outp=c("euclidean", "euclidean", "maximum",
-                               "manhattan", "binary"),
-                        dtitle=c("Euclidean", "Euclidean^2", "Maximum",
-                                 "Absolute", "Binary"))
-   outdist <- distdf[,2:3]
-   rownames(outdist) <- distdf[,1]
-   dtype <- outdist[dist,1]
-   dtitle <- outdist[dist,2]
-   #
-   # Create lookup for linkage method and linkage title
-   #
-   linkdf <- data.frame(inp=c("ward", "single", "complete", "average"),
-                        outp=c("ward.D", "single", "complete", "average"),
-                        ltitle=c("Ward's D", "Single", "Complete", "Average"))
-   outlink <- linkdf[,2:3]
-   rownames(outlink) <- linkdf[,1]
-   ltype <- outlink[method,1]
-   ltitle <- outlink[method,2]
-   #
-   # Create power for distance (needed for euc2)
-   #
-   if(dist=="euc2") {
-      pw <- 2
-   } else {
-      pw <- 1
+   vars <- names(data)
+   
+   # legacy stopping indices were 1:10
+   k_range <- 1:10
+   
+   # ---- fit using new function (handles plotting, diagnostics, NA drops, etc.) ----
+   fit <- easy_hc_fit(
+      data = data,
+      vars = vars,
+      dist = dist,
+      method = method,
+      k_range = k_range,
+      standardize = TRUE,
+      show_dend = TRUE
+   )
+   
+   # helper: legacy stop table
+   legacy_stop <- function(stop_raw) {
+      data.frame(
+         "Num.Clusters" = stop_raw$Num.Clusters,
+         "Duda/Hart"    = stop_raw$Duda.Hart,
+         "pseudo-t^2"   = stop_raw$pseudo.t2,
+         check.names = FALSE
+      )
    }
-   #
-   # Create dissimilarity matrix
-   #
-   diss <- dist(data, method=dtype)^pw
-   #
-   # Create base hclust and dendrogram object
-   #
-   hc <- hclust(diss, method=ltype)
-   hcd <- as.dendrogram(hc)
-   #
-   # IF CUT IS MISSING, CREATE ONLY DENDROGRAM (AND MAYBE clustop INDICES)
-   #
-   if(missing(cuts)) {
-      dend <- as.dendrogram(hc)
-      sub <- "All Branches"
-      plot(dend, ylab="Similarity Measure",
-           main=paste(dtitle,"Distance /",ltitle,"Linkage"),
-           sub=sub)
-      if (clustop=="N") {
+   
+   # ---- no cuts (legacy behavior) ----
+   if (missing(cuts)) {
+      if (clustop == "N") {
          return("No Cuts")
       } else {
-         require(NbClust)
-         duda <- NbClust(data, diss=diss, distance=NULL, min.nc=1, max.nc=10, method=ltype, index="duda")$All.index
-         pseudot2 <- NbClust(data, diss=diss, distance=NULL, min.nc=1, max.nc=10, method=ltype, index="pseudot2")$All.index
-         out <- data.frame("Num.Clusters"=1:10,"Duda/Hart"=duda, "pseudo-t^2"=pseudot2)
-         return(list("stop"=out))
+         return(list(stop = legacy_stop(fit$stop_raw)))
       }
-   } else {
-      hcd_h <- heights_per_k.dendrogram(hcd)
-   #
-   # IF CUT IS NOT MISSING, CREATE TABLES AND DENDROGRAM
-   #
-      #
-      # Create tables
-      #
-      kc_table <- lapply(cuts,
-                         function(i) data.frame(table(cutree(hcd, k=i))))
-      kc_table <- sortfreq(kc_table)
-      k_count <- suppressWarnings(Reduce(function(d1, d2) merge(d1, d2,
-                                               by="Var1", all=TRUE),
-                        kc_table))
-      if (length(cuts)>1) {
-         cnc <- sapply(cuts, function(i) paste0("k_", cuts,
-                                                "_Count"))[,1]
-      } else {
-         cnc <- paste0("k_", cuts, "_Count")
-      }
-      colnames(k_count) <- c("Cluster", cnc)
-      k_count
-
-      kp_table <- lapply(cuts,
-                         function(i) data.frame(round(100*prop.table(table(cutree(hcd, k=i))),2)))
-      kp_table <- sortfreq(kp_table)
-      k_perc <- suppressWarnings(Reduce(function(d1, d2) merge(d1, d2,
-                                              by="Var1", all=TRUE),
-                       kp_table))
-      if (length(cuts)>1) {
-         cnp <- sapply(cuts, function(i) paste0("k_", cuts, "_Percent"))[,1]
-      } else {
-         cnp <- paste0("k_", cuts, "_Percent")
-      }
-      colnames(k_perc) <- c("Cluster", cnp)
-      k_perc
-      #
-      # Create dendrogram with bars
-      #
-      cuts_m <- max(cuts)
-      the_bars <- sapply(cuts,
-                         function(i) cutree(hcd, k=i,
-                                            order_clusters_as_data = FALSE))
-      if (length(cuts)>1) {
-         cn <- sapply(cuts, function(i) paste0("k_",cuts))[,1]
-      } else {
-         cn <- paste0("k_", cuts)
-      }
-      colnames(the_bars) <- cn
-      hcd %>%
-         set("branches_k_color", k=cuts_m) %>%
-         set("branches_lwd", 4) %>%
-         set("labels_colors","white") %>%
-         plot(ylim=c(hcd_h[cuts_m], hcd_h[1]),
-              ylab="Similarity Measure",
-              main=paste(dtitle,"Distance /",ltitle,"Linkage"))
-      colored_bars(colors=the_bars, dend=hcd, sort_by_labels_order = FALSE)
-      if (clustop=="N") {
-         results <- list("kcount"=k_count, "kperc"=k_perc, "hc"=hc)
-         return(results)
-      } else {
-         require(NbClust)
-         duda <- NbClust(data, diss=diss, distance=NULL, min.nc=1, max.nc=10, method=ltype, index="duda")$All.index
-         pseudot2 <- NbClust(data, diss=diss, distance=NULL, min.nc=1, max.nc=10, method=ltype, index="pseudot2")$All.index
-         out <- data.frame("Num.Clusters"=1:10,"Duda/Hart"=duda, "pseudo-t^2"=pseudot2)
-         results <- list("kcount"=k_count, "kperc"=k_perc, "hc"=hc, "stop"=out)
-         return(results)
-      }
-
    }
- }
+   
+   # ---- cuts provided: reconstruct kcount / kperc like legacy ----
+   cuts <- as.integer(cuts)
+   cuts <- sort(unique(cuts[!is.na(cuts) & cuts >= 1]))
+   if (length(cuts) < 1) stop("`cuts` must contain at least one positive integer.", call. = FALSE)
+   
+   # membership for each k based on USED rows (legacy used all rows; new drops NAs,
+   # but in this wrapper we're passing only clustering vars, so this is typically identical)
+   memb_list <- lapply(cuts, function(k) stats::cutree(fit$hc, k = k))
+   
+   # counts table merged by cluster id
+   kc_list <- lapply(seq_along(cuts), function(i) {
+      tab <- table(memb_list[[i]])
+      data.frame(Cluster = as.integer(names(tab)), Count = as.integer(tab))
+   })
+   
+   kcount <- Reduce(function(d1, d2) merge(d1, d2, by = "Cluster", all = TRUE), kc_list)
+   count_names <- paste0("k_", cuts, "_Count")
+   names(kcount) <- c("Cluster", count_names)
+   
+   # perc table merged by cluster id
+   kp_list <- lapply(seq_along(cuts), function(i) {
+      tab <- table(memb_list[[i]])
+      pct <- round(100 * as.numeric(tab) / sum(tab), 2)
+      data.frame(Cluster = as.integer(names(tab)), Percent = pct)
+   })
+   
+   kperc <- Reduce(function(d1, d2) merge(d1, d2, by = "Cluster", all = TRUE), kp_list)
+   perc_names <- paste0("k_", cuts, "_Percent")
+   names(kperc) <- c("Cluster", perc_names)
+   
+   if (clustop == "N") {
+      return(list(kcount = kcount, kperc = kperc, hc = fit$hc))
+   } else {
+      return(list(kcount = kcount, kperc = kperc, hc = fit$hc, stop = legacy_stop(fit$stop_raw)))
+   }
+}

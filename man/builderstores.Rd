@@ -5,33 +5,34 @@
 \alias{builderstores}
 \title{Builder Stores}
 \format{
-A data frame with 280 rows and 8 columns:
+A data frame with 280 rows and 8 variables:
 \describe{
-  \item{\code{brand}}{Factor variable with the name of the brand}
-  \item{\code{conv}}{Shopping at location is convenient  
-      (1:Strongly Disagree to 6:Strongly Agree)}
-  \item{\code{choice}}{Has a large selection of products to choose from  
-      (1:Strongly Disagree to 6:Strongly Agree)}
-  \item{\code{price}}{The prices are low  
-      (1:Strongly Disagree to 6:Strongly Agree)}
-  \item{\code{product}}{The products are high quality  
-      (1:Strongly Disagree to 6:Strongly Agree)}
-  \item{\code{service}}{Provides high quality service  
-      (1:Strongly Disagree to 6:Strongly Agree)}
-  \item{\code{avail}}{The product I want is usually in-stock 
-      (1:Strongly Disagree to 6:Strongly Agree)}
-  \item{\code{pref}}{Brand preference rating 
-      (1:Not at all preferred to 5:Very preferred)}
+\item{brand}{Factor. Store/brand identifier (masked) with 4 levels.}
+\item{conv}{Integer. Convenience rating on a 1--6 agreement scale
+(\code{1 = Strongly Disagree}, \code{6 = Strongly Agree}).}
+\item{choice}{Integer. Perceived selection rating on a 1--6 agreement scale
+(\code{1 = Strongly Disagree}, \code{6 = Strongly Agree}).}
+\item{price}{Integer. Perceived low-price rating on a 1--6 agreement scale
+(\code{1 = Strongly Disagree}, \code{6 = Strongly Agree}).}
+\item{product}{Integer. Perceived product quality rating on a 1--6 agreement scale
+(\code{1 = Strongly Disagree}, \code{6 = Strongly Agree}).}
+\item{service}{Integer. Perceived service quality rating on a 1--6 agreement scale
+(\code{1 = Strongly Disagree}, \code{6 = Strongly Agree}).}
+\item{avail}{Integer. Perceived in-stock availability rating on a 1--6 agreement scale
+(\code{1 = Strongly Disagree}, \code{6 = Strongly Agree}).}
+\item{pref}{Integer. Overall preference rating on a 1--5 scale
+(\code{1 = Not at all preferred}, \code{5 = Very preferred}).}
 }
 }
 \source{
-Unknown
+Unknown.
 }
 \usage{
-data(greekbrands)
+builderstores
 }
 \description{
-Attribute and preference data for 4 home improvement stores (names are 
-    masked). Each brand is rated 70 times.
+Attribute ratings and preference ratings for four masked home-improvement
+stores, used for teaching attribute-based preference modeling and perceptual
+mapping.
 }
 \keyword{datasets}

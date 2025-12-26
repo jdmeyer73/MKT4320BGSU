@@ -5,20 +5,20 @@
 \alias{directmktg}
 \title{Direct Marketing Data}
 \format{
-A data frame with 400 rows and 5 columns:
+A data frame with 400 rows and 5 variables:
 \describe{
-  \item{userid}{Unique identifier}
-  \item{age}{Prospect's age}
-  \item{buy}{Buying decision (Yes or No)}
-  \item{gender}{Prospect's gender}
-  \item{salary}{Prospect's salary (in 000s)}
+\item{userid}{Integer or character. Unique identifier for the prospect.}
+\item{age}{Numeric/integer. Prospect age in years.}
+\item{buy}{Factor or character with two levels: \code{"Yes"} and \code{"No"}. Buying decision.}
+\item{gender}{Factor or character. Prospect gender (coding as provided).}
+\item{salary}{Numeric. Prospect salary in thousands (000s).}
 }
 }
 \source{
-Unknown
+Unknown.
 }
 \usage{
-data(directmktg)
+directmktg
 }
 \description{
 Dataset containing purchase decisions for a direct marketing campaign.

@@ -1,53 +1,110 @@
-#' @title Easy Alternative Specific MNL Marginal Effects
-#' @description This function provides marginal effects tables for a saved
-#'     \code{asmnl_est} object
+#' @title Alternative-Specific MNL Marginal Effects (Deprecated)
+#' @description
+#' Deprecated. Use \code{\link{pp_as_mnl}} instead.
+#'
 #' @details
-#' REQUIRED PACKAGES:
-#' \itemize{
-#'   \item mlogit
+#' \code{asmnl_me()} is retained for backward compatibility with older course
+#' materials. The new function \code{pp_as_mnl()} operates on a fitted
+#' \code{mlogit} model and computes tables/plots for one focal variable at a time.
+#'
+#' This deprecated wrapper will compute marginal effects for \emph{each numeric}
+#' variable in the training \code{dfidx} data stored in the fitted model and
+#' return a named list of \code{pp_as_mnl} results.
+#'
+#' Recommended new usage:
+#' \preformatted{
+#' res <- pp_as_mnl(model, focal_var = "income", me_method = "observed")
+#' res$pp_table
+#' res$pp_plot
+#' res$me_table
 #' }
-#' @param mod The object containing the results of the \code{asmnl_est} function
-#' @return Text output of predicted probabilities for each brand and the
-#'     marginal effects for each independent variable
+#' #' @section Migration note:
+#' Previously, \code{asmnl_me()} computed marginal effects for \emph{all}
+#' numeric variables at once. The new workflow computes marginal effects for
+#' \emph{one focal variable at a time}.
+#'
+#' Replace:
+#' \preformatted{
+#' asmnl_me(mod)
+#' }
+#'
+#' With:
+#' \preformatted{
+#' pp_as_mnl(mod, focal_var = "income", marginal = TRUE)
+#' }
+#'
+#' To reproduce the old "at means" behavior, use:
+#' \preformatted{
+#' pp_as_mnl(mod, focal_var = "income", marginal = TRUE,
+#'           me_method = "means")
+#' }
+#'
+#' @param mod A fitted \code{mlogit} model (legacy input from \code{asmnl_est()}).
+#' @param me_method Character; marginal effect method passed to \code{pp_as_mnl()}:
+#'   \code{"observed"} (AME) or \code{"means"} (at means). Default \code{"means"}
+#'   to mimic the legacy behavior most closely.
+#' @param me_step Numeric; step size for \code{me_method="observed"} finite differences.
+#' @param ft Logical; if \code{TRUE}, return tables as flextables (default \code{FALSE}).
+#' @param digits Integer; rounding for returned tables (default 4).
+#'
+#' @return A named list of \code{pp_as_mnl} objects (one per focal variable).
+#'
 #' @examples
-#' altspec_model <- asmnl_est(formula=myformula, data=train.yog, id="id",
-#'                            alt="brand", choice="choice", 
-#'                            testdata=test.yog)
-#' asmnl_me(altspec_model)
-
-asmnl_me <- function(mod) {
-   require(mlogit)
-   mlen <- length(mod$model) - 3
-   mlen2 <- mlen + 1
-   mdata <- mod$model[,1:mlen2]
-   zt <- 0
-   mnames <- names(mod$model)[2:mlen]
-   for (i in 2:mlen) {
-      x <- data.frame(tapply(mod$model[[i]], idx(mod,2), mean))
-      zt <- data.frame(zt,x)
-   }
-   zt <- zt[,-1]
-   colnames(zt) <- mnames
-
+#' # mod <- asmnl_est(...)
+#' # out <- asmnl_me(mod)  # deprecated
+#' # out[["income"]]$me_table
+#'
+#' @importFrom utils packageName
+#' @export
+asmnl_me <- function(mod,
+                     me_method = c("means", "observed"),
+                     me_step = 1,
+                     ft = FALSE,
+                     digits = 4) {
    
-   for (i in 1:dim(zt)[1]) {
-      for (j in 1:dim(zt)[2]) {
-         mdata[idx(mdata,2)==rownames(zt)[i], colnames(zt)[j]] <- zt[i,j]
-      }
-   }
-   pprob <- round(apply(predict(mod, newdata=mdata), 2, mean),4)
-   outtitle <- paste0("\n",
-                        "--------------------------------","\n",
-                        "Predicted Probabilities at Means","\n",
-                        "--------------------------------","\n")
-   cat(outtitle)
-   print(pprob)
+   .Deprecated(
+      new = "pp_as_mnl",
+      package = utils::packageName(),
+      msg = "asmnl_me() is deprecated; use pp_as_mnl(OBJ, focal_var=...) instead."
+   )
    
-   for (var in mnames) {
-      dash <- paste(rep("-",nchar(var)), collapse="")
-      sep <- paste0("---------------------",dash)
-      outme <- paste0("Marginal effects for ", var)
-      cat("\n",sep,"\n",outme,"\n",sep,"\n")
-      print(round(effects(mod, covariate=var, type="aa", data=zt),5))
+   me_method <- match.arg(me_method)
+   
+   if (!inherits(mod, "mlogit")) {
+      stop("`mod` must be a fitted mlogit model (class 'mlogit').", call. = FALSE)
    }
+   if (is.null(mod$model) || !inherits(mod$model, "dfidx")) {
+      stop("Training dfidx data not found in `mod$model`.", call. = FALSE)
+   }
+   
+   dd <- as.data.frame(mod$model)
+   
+   # numeric-only variables (skip indexes + response-ish columns if present)
+   is_num <- vapply(dd, function(x) is.numeric(x) || is.integer(x), logical(1))
+   vars <- names(dd)[is_num]
+   
+   # Drop obviously non-covariate numeric columns if they exist
+   drop_names <- intersect(vars, c("choice", "chid", "idx", "alt", "id"))
+   vars <- setdiff(vars, drop_names)
+   
+   if (length(vars) == 0) {
+      stop("No numeric covariates found in the model data to compute marginal effects for.", call. = FALSE)
+   }
+   
+   out <- setNames(vector("list", length(vars)), vars)
+   
+   for (v in vars) {
+      out[[v]] <- pp_as_mnl(
+         OBJ = mod,
+         focal_var = v,
+         focal_type = "auto",
+         digits = digits,
+         ft = ft,
+         marginal = TRUE,
+         me_method = me_method,
+         me_step = me_step
+      )
+   }
+   
+   out
 }

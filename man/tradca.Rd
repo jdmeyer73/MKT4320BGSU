@@ -7,45 +7,42 @@
 tradca(formula, data, idvar)
 }
 \arguments{
-\item{formula}{An object with a saved formula with a DV on the left side
-and IVs on the right side separated by a tilde (e.g., \code{myform = 
-    value ~ attr1 + attr2 + attr3})}
+\item{formula}{A model formula with a DV on the left side and attributes on the
+right side (e.g., \code{value ~ attr1 + attr2 + attr3}).}
 
-\item{data}{The name of the data frame with the value ratings for each
-profile}
+\item{data}{Data frame containing the profile ratings.}
 
-\item{idvar}{The variable that identifies the case (in quotations)}
+\item{idvar}{Character string giving the case id variable name.}
 }
 \value{
-A list containing the following objects:
+A list with:
 \itemize{
-  \item \code{$pwplot} contains a plot with average part-worth values for
-      each attribute
-  \item \code{$impplot} contains a plot with the average importances
-  \item \code{$casetable} contains a data frame with the part-worths and
-      importances for each case
+\item \code{$pwplot} mean part-worth plot(s)
+\item \code{$impplot} mean importance plot
+\item \code{$casetable} case-level part-worths and importances
+\item \code{$coutlong} long-format case-level part-worths
 }
 }
 \description{
-This function produces overall part-worth plots for each 
-    attribute in a traditional conjoint analysis, along with an attribute
-    importance plot and a table with case-level part worths and importances.
+Produce overall part-worth plots for each attribute in a traditional conjoint
+analysis, along with an attribute-importance plot and a case-level table of
+part-worths and importances.
 }
 \details{
-For best results, the results of the function should be saved to an object. \cr
-REQUIRED PACKAGES:
-\itemize{
-  \item broom
-  \item dplyr
-  \item stringr
-  \item ggplot2
-}
+This is a legacy function retained for backwards compatibility with older
+course materials. It is not used in current student workflows.
+
+For best results, save output to an object.
 }
 \examples{
+\dontrun{
 caform <- value ~ airline + connect + price
-results <- tradca(formula = caform, data = airlineca, idvar="caseid")
+results <- tradca(formula = caform, data = airlineca, idvar = "caseid")
 
 results$pwplot
 results$impplot
-results$casetable
+head(results$casetable)
 }
+
+}
+\keyword{internal}

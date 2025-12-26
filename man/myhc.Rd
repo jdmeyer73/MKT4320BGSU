@@ -2,7 +2,7 @@
 % Please edit documentation in R/myhc.R
 \name{myhc}
 \alias{myhc}
-\title{Easy Hierarchical Agglomerative Clustering}
+\title{(Deprecated) Easy Hierarchical Agglomerative Clustering}
 \usage{
 myhc(
   data,
@@ -13,85 +13,63 @@ myhc(
 )
 }
 \arguments{
-\item{data}{A data frame containing only the variables on which to cluster}
+\item{data}{A data frame (or numeric matrix) containing only variables used for clustering.}
 
-\item{dist}{Distance measure to be used for the similarity/dissimilarity
-    matrix. Must be in quotations. Takes one of the following values:
-\itemize{
-  \item \code{dist="euc"} provides Euclidean distance
-  \item \code{dist="euc2"} provides Euclidean Squared distance
-  \item \code{dist="max"} provides Maximum distance
-  \item \code{dist="abs"} provides Absolute distance
-  \item \code{dist="bin"} provides a distance measure for a set of binary-only variables
-}}
+\item{dist}{Distance measure: \code{"euc"}, \code{"euc2"}, \code{"max"}, \code{"abs"}, \code{"bin"}.}
 
-\item{method}{Indicates the linkage method. Must be in quotations. Takes one
-    of the following values:
-\itemize{
-\item \code{method="single"} provides Single linkage
-\item \code{method="complete"} provides Complete linkage
-\item \code{method="average"} provides Average linkage
-\item \code{method="ward"} provides Ward’s linkage
-}}
+\item{method}{Linkage: \code{"ward"}, \code{"single"}, \code{"complete"}, \code{"average"}.}
 
-\item{cuts}{Indicates how many clusters are desired for the solution (optional).}
+\item{cuts}{Optional integer vector of cluster solutions to tabulate (legacy behavior).}
 
-\item{clustop}{Indicates if stopping indices are wanted. Must be in quotations.
-    Takes one of the following values:
-\itemize{
-\item \code{clustop="Y"} if indices are wanted
-\item \code{clustop="N"} if indices are not wanted
-}}
+\item{clustop}{\code{"Y"} to return stopping indices; \code{"N"} otherwise.}
 }
 \value{
-A list containing the following objects:
+If \code{cuts} is missing:
 \itemize{
-  \item if \code{cuts} are provided:
-      \itemize{
-         \item Dendrogram of the top \emph{n} branches, where \emph{n} is
-             the highest number of clusters provided by \code{cuts}.
-             Displayed automatically and not saved to the list object.
-         \item \code{$kcount} is a table of cluster sizes
-         \item \code{$kperc} is table of cluster size percentages
-         \item \code{$hc} is the \code{hclust} object created
-         \item \code{$stop} is a table of stopping indices for 1 to 10 clusters
-              if \code{clustop="Y"}
-      }
-  \item if \code{cuts} are not provided:
-      \itemize{
-         \item Dendrogram with all branches.  Displayed automatically and
-             not saved to the list object.
-         \item \code{$stop} is a table of stopping indices for 1 to 10 clusters
-              if \code{clustop="Y"}
-      }
+\item returns \code{"No Cuts"} if \code{clustop="N"}
+\item returns \code{list(stop = <data.frame>)} if \code{clustop="Y"}
+}
+
+If \code{cuts} is provided:
+\itemize{
+\item returns \code{list(kcount = ..., kperc = ..., hc = ...)} if \code{clustop="N"}
+\item returns \code{list(kcount = ..., kperc = ..., hc = ..., stop = ...)} if \code{clustop="Y"}
 }
 }
 \description{
-This function performs hierarchical agglomerative clustering,
-    allowing the user to pick a specific number of clusters, get stopping
-    indices, etc.
+Deprecated. Use \code{\link{easy_hc_fit}} (fit & diagnostics) and
+\code{\link{easy_hc_final}} (final solution + membership) instead.
 }
 \details{
-For best results, the results of the function should be saved to an object. \cr
-REQUIRED PACKAGES:
+\strong{Deprecated.} This function is retained for backward compatibility.
+It forwards to \code{\link{easy_hc_fit}} for clustering/diagnostics and
+reconstructs legacy outputs (\code{kcount}, \code{kperc}, \code{hc}, and
+optionally \code{stop}) when possible.
+
+Migration notes:
 \itemize{
-  \item dendextend
-  \item dplyr
-  \item NbClust
+\item \code{cuts} corresponds to selecting \code{k} later via
+\code{\link{easy_hc_final}}. This legacy function supports multiple cuts
+and returns multi-\code{k} count/percent tables.
+\item \code{clustop="Y"} returns legacy Duda/Hart and pseudo-t^2 indices as
+a data frame similar to prior behavior.
 }
 }
 \examples{
-#No cuts with stopping indices
-eg1 <- myhc(sc.clvar, "euc", "ward", "Y")
+\dontrun{
+# No cuts with stopping indices
+eg1 <- myhc(sc.clvar, "euc", "ward", clustop = "Y")
 eg1$stop
 
-#One cut without stopping indices
-eg2 <- myhc(sc.clvar, "max", "ward", cuts=5, "N")
+# One cut without stopping indices
+eg2 <- myhc(sc.clvar, "max", "ward", cuts = 5, clustop = "N")
 eg2$kcount
 eg2$kperc
 
-#Multiple cuts without stopping indices
-eg3 <- myhc(sc.clvar, "abs", "ward", cuts=c(2,3,4,6), "N")
+# Multiple cuts without stopping indices
+eg3 <- myhc(sc.clvar, "abs", "ward", cuts = c(2, 3, 4, 6), clustop = "N")
 eg3$kcount
 eg3$kperc
+}
+
 }

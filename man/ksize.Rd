@@ -2,36 +2,45 @@
 % Please edit documentation in R/ksize.R
 \name{ksize}
 \alias{ksize}
-\title{Cluster Sizes for k-Means Clustering}
+\title{Cluster Sizes for k-Means Clustering (Deprecated)}
 \usage{
 ksize(data, centers, nstart = 25, seed = 4320)
 }
 \arguments{
-\item{data}{A data frame containing only the variables on which to cluster}
+\item{data}{A data frame containing only the (numeric) variables used for clustering.}
 
-\item{centers}{One or more integers for the specific \emph{k} cluster
-solutions to be examined}
+\item{centers}{Integer vector; the k solutions to examine.}
 
-\item{nstart}{An integer value for the number of random starting points
-to try (default = 25)}
+\item{nstart}{Integer; number of random starts for kmeans (default = 25).}
 
-\item{seed}{A random number seed for reproducible results (default = 4320)}
+\item{seed}{Integer; random seed for reproducible results (default = 4320).}
 }
 \value{
-A list containing the following objects:
-\itemize{
-  \item \code{$kcount} is a table of cluster sizes
-  \item \code{$kperc} is a table of cluster size percentages
-}
+A list with elements \code{kcount} and \code{kperc}.
 }
 \description{
-This function produces a produces a count and proportion tables
-     for the selected \emph{k} solutions
+Deprecated. Use \code{\link{easy_km_fit}} instead.
 }
 \details{
-For easiest use, the results of the function should be saved to an object.
+This function is a thin wrapper around \code{\link{easy_km_fit}}.
+It fits k-means for the requested \code{centers} values and returns legacy
+cluster-size tables:
+\itemize{
+\item \code{kcount}: counts by cluster (sorted within each k),
+\item \code{kperc}: percentages by cluster (sorted within each k).
+}
+
+Migration:
+\itemize{
+\item \code{ksize(data, centers, nstart, seed)} \eqn{\rightarrow}
+\code{easy_km_fit(data, vars = names(data), k_range = centers, nstart = nstart, seed = seed)}
+}
 }
 \examples{
-#Examining three different cluster solutions for default nstart and seed
-ks <- ksize(sc.clvar, centers=c(3,4,5))
+\dontrun{
+ks <- ksize(sc.clvar, centers = c(3, 4, 5))
+ks$kcount
+ks$kperc
+}
+
 }

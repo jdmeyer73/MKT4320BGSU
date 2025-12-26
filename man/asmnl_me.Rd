@@ -2,30 +2,75 @@
 % Please edit documentation in R/asmnl_me.R
 \name{asmnl_me}
 \alias{asmnl_me}
-\title{Easy Alternative Specific MNL Marginal Effects}
+\title{Alternative-Specific MNL Marginal Effects (Deprecated)}
 \usage{
-asmnl_me(mod)
+asmnl_me(
+  mod,
+  me_method = c("means", "observed"),
+  me_step = 1,
+  ft = FALSE,
+  digits = 4
+)
 }
 \arguments{
-\item{mod}{The object containing the results of the \code{asmnl_est} function}
+\item{mod}{A fitted \code{mlogit} model (legacy input from \code{asmnl_est()}).}
+
+\item{me_method}{Character; marginal effect method passed to \code{pp_as_mnl()}:
+\code{"observed"} (AME) or \code{"means"} (at means). Default \code{"means"}
+to mimic the legacy behavior most closely.}
+
+\item{me_step}{Numeric; step size for \code{me_method="observed"} finite differences.}
+
+\item{ft}{Logical; if \code{TRUE}, return tables as flextables (default \code{FALSE}).}
+
+\item{digits}{Integer; rounding for returned tables (default 4).}
 }
 \value{
-Text output of predicted probabilities for each brand and the
-    marginal effects for each independent variable
+A named list of \code{pp_as_mnl} objects (one per focal variable).
 }
 \description{
-This function provides marginal effects tables for a saved
-    \code{asmnl_est} object
+Deprecated. Use \code{\link{pp_as_mnl}} instead.
 }
 \details{
-REQUIRED PACKAGES:
-\itemize{
-  \item mlogit
+\code{asmnl_me()} is retained for backward compatibility with older course
+materials. The new function \code{pp_as_mnl()} operates on a fitted
+\code{mlogit} model and computes tables/plots for one focal variable at a time.
+
+This deprecated wrapper will compute marginal effects for \emph{each numeric}
+variable in the training \code{dfidx} data stored in the fitted model and
+return a named list of \code{pp_as_mnl} results.
+
+Recommended new usage:
+\preformatted{
+res <- pp_as_mnl(model, focal_var = "income", me_method = "observed")
+res$pp_table
+res$pp_plot
+res$me_table
+}
+#' @section Migration note:
+Previously, \code{asmnl_me()} computed marginal effects for \emph{all}
+numeric variables at once. The new workflow computes marginal effects for
+\emph{one focal variable at a time}.
+
+Replace:
+\preformatted{
+asmnl_me(mod)
+}
+
+With:
+\preformatted{
+pp_as_mnl(mod, focal_var = "income", marginal = TRUE)
+}
+
+To reproduce the old "at means" behavior, use:
+\preformatted{
+pp_as_mnl(mod, focal_var = "income", marginal = TRUE,
+          me_method = "means")
 }
 }
 \examples{
-altspec_model <- asmnl_est(formula=myformula, data=train.yog, id="id",
-                           alt="brand", choice="choice", 
-                           testdata=test.yog)
-asmnl_me(altspec_model)
+# mod <- asmnl_est(...)
+# out <- asmnl_me(mod)  # deprecated
+# out[["income"]]$me_table
+
 }

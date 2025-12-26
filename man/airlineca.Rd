@@ -5,27 +5,30 @@
 \alias{airlineca}
 \title{Airline Conjoint Analysis Data}
 \format{
-A data frame with 360 rows and 9 columns:
+A data frame with 360 rows and 9 variables:
 \describe{
-  \item{\code{caseid}}{Identification number for each case}
-  \item{\code{bundle}}{Identification number for each profile}
-  \item{\code{value}}{Profile rating (0:Low to 100:High)}
-  \item{\code{airline}}{Airline brand attribute (SW, Delta, Spirit)}
-  \item{\code{connect}}{Number of connections attribute (None, One)}
-  \item{\code{price}}{Ticket price attribute ($300, $450, $600)}
-  \item{\code{inc}}{Respondent income in 000s}
-  \item{\code{type}}{Respondent flight type (Business, Pleasure)}
-  \item{\code{age}}{Respondent age in years}
+\item{caseid}{Integer. Respondent identifier.}
+\item{bundle}{Integer. Profile (stimulus) identifier.}
+\item{value}{Numeric. Profile rating on a 0--100 scale (\code{0 = Low}, \code{100 = High}).}
+\item{airline}{Factor or character. Airline brand (\code{SW}, \code{Delta}, \code{Spirit}).}
+\item{connect}{Factor or character. Number of connections (\code{None}, \code{One}).}
+\item{price}{Factor or character. Ticket price (\code{300}, \code{450}, \code{600}).}
+\item{inc}{Numeric. Respondent income in thousands of U.S. dollars.}
+\item{type}{Factor or character. Flight purpose (\code{Business}, \code{Pleasure}).}
+\item{age}{Numeric. Respondent age in years.}
 }
 }
 \source{
-Unknown
+Collected from MKT 3200 students for instructional purposes.
 }
 \usage{
-data(airlineca)
+airlineca
 }
 \description{
-Data from a traditional conjoint analysis where respondents rated 9 profiles 
-    on three attributes.
+Data from a ratings-based conjoint analysis in which respondents evaluated
+airline profiles defined by multiple attributes.
+}
+\details{
+Each respondent evaluated 9 airline profiles.
 }
 \keyword{datasets}
