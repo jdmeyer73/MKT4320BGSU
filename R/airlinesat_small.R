@@ -1,0 +1,30 @@
+#' Airline Satisfaction Data (Small)
+#'
+#' Reduced dataset adapted from \emph{A Concise Guide to Market Research} by Erik Mooi and
+#' Marko Sarstedt. Contains passenger characteristics, overall satisafaction, and
+#' loyalty for a fictional airline (Oddjob Airways).
+#'
+#' @details
+#' Commonly used for teaching customer satisfaction modeling,
+#' expectation--disconfirmation, and loyalty analysis.
+#'
+#' @docType data
+#' @format A data frame with 1,065 rows and 70 variables:
+#' \describe{
+#'   \item{age}{Numeric. Respondent age in years.}
+#'   \item{country}{Factor or character. Respondent home country.}
+#'   \item{flight_class}{Factor or character. Class of flight (\code{Economy}, \code{Business}).}
+#'   \item{flight_latest}{Factor or character. Most recent flight with the airline.}
+#'   \item{flight_purpose}{Factor or character. Purpose of flight (\code{Business}, \code{Leisure}).}
+#'   \item{flight_type}{Factor or character. Type of flight (\code{Domestic}, \code{International}).}
+#'   \item{gender}{Factor or character. Gender.}
+#'   \item{language}{Factor or character. Primary language.}
+#'   \item{nflights}{Integer. Number of flights taken in the past 12 months.}
+#'   \item{status}{Factor or character. Loyalty program status.}
+#'   \item{nps}{Numeric or integer. Net Promoter Score.}
+#'   \item{overall_sat}{Numeric or integer. Overall satisfaction (1 = very negative, 7 = very positive).}
+#'   \item{reputation}{Numeric or integer. Overall reputation (1 = very negative, 7 = very positive).}
+#' }
+#' @source Downloaded from the authors' companion resources site.
+#' @keywords datasets
+"airlinesat_small"
