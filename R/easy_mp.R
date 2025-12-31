@@ -58,9 +58,7 @@ easy_mp <- function(model, focal, int = NULL) {
       quants <- stats::quantile(x, c(0.01, 0.5, 0.99), na.rm = TRUE)
       step   <- (quants[3] - quants[1]) / (n_levels - 1)
       
-      if (step <= 0) {
-         return(rep(quants[2], n_levels))
-      }
+      if (step <= 0) return(rep(quants[2], n_levels))
       
       if (step > 1) {
          vals <- seq(quants[1], quants[3], by = step)
@@ -77,9 +75,7 @@ easy_mp <- function(model, focal, int = NULL) {
       rng  <- range(x, na.rm = TRUE)
       step <- (rng[2] - rng[1]) / 100
       
-      if (step <= 0) {
-         return(rng[1])
-      }
+      if (step <= 0) return(rng[1])
       
       if (step > 1) {
          vals <- seq(rng[1], rng[2], by = step)
@@ -124,7 +120,6 @@ easy_mp <- function(model, focal, int = NULL) {
    }
    
    # ---- basic model checks ----
-   
    if (!inherits(model, c("lm", "glm"))) {
       stop("`model` must be an 'lm' or 'glm' object.", call. = FALSE)
    }
@@ -142,7 +137,6 @@ easy_mp <- function(model, focal, int = NULL) {
    resp_terms  <- insight::find_terms(model)$response
    
    # ---- log-transform detection ----
-   
    log_f  <- any(grepl(sprintf("log\\(%s\\)", focal), params_cond))
    log_i  <- !is.null(int) &&
       any(grepl(sprintf("log\\(%s\\)", int), params_cond))
@@ -162,11 +156,7 @@ easy_mp <- function(model, focal, int = NULL) {
    f_raw <- dat[[focal_col]]
    f_num <- is.numeric(f_raw)
    
-   if (log_f) {
-      f_data <- exp(f_raw)
-   } else {
-      f_data <- f_raw
-   }
+   f_data <- if (log_f) exp(f_raw) else f_raw
    
    if (f_num) {
       f.val <- myval_f(f_data)
@@ -184,11 +174,7 @@ easy_mp <- function(model, focal, int = NULL) {
       i_raw <- dat[[int_col]]
       i_num <- is.numeric(i_raw)
       
-      if (log_i) {
-         i_data <- exp(i_raw)
-      } else {
-         i_data <- i_raw
-      }
+      i_data <- if (log_i) exp(i_raw) else i_raw
       
       if (i_num) {
          i.val <- myval_i(i_data, n_levels = 4)
@@ -196,24 +182,12 @@ easy_mp <- function(model, focal, int = NULL) {
    }
    
    # ---- determine plot type ----
-   
    if (!is.null(int)) {
-      # Check that interaction exists in the model
       inter_terms <- paste(insight::find_interactions(model)$conditional,
                            collapse = " ")
       
-      # Construct possible interaction names, accounting for logs
-      if (log_f) {
-         f_name <- sprintf("log(%s)", focal)
-      } else {
-         f_name <- focal
-      }
-      
-      if (log_i) {
-         i_name <- sprintf("log(%s)", int)
-      } else {
-         i_name <- int
-      }
+      f_name <- if (log_f) sprintf("log(%s)", focal) else focal
+      i_name <- if (log_i) sprintf("log(%s)", int) else int
       
       ic1 <- paste0(f_name, ":", i_name)
       ic2 <- paste0(i_name, ":", f_name)
@@ -226,7 +200,6 @@ easy_mp <- function(model, focal, int = NULL) {
                  "interaction variables.")
       }
       
-      # Determine plot type based on numeric vs categorical
       if (f_num && i_num) {
          plot.type <- "cont.cont"
       } else if (f_num && !i_num) {
@@ -240,44 +213,16 @@ easy_mp <- function(model, focal, int = NULL) {
       plot.type <- if (f_num) "cont.null" else "cat.null"
    }
    
-   # ---- helper availability checks (student-friendly) ----
-   
-   if (!exists("get_x_title", mode = "function", inherits = TRUE)) {
-      stop(
-         paste0(
-            "The helper function `get_x_title()` is not available.\n",
-            "This usually means the MKT analytics helper functions were not loaded.\n",
-            "Ask your instructor which package/script to load before using `easy_mp()`."
-         ),
-         call. = FALSE
-      )
-   }
-   
-   if (plot.type %in% c("cont.cont", "cont.cat", "cat.cont", "cat.cat") &&
-       !exists("get_legend_title", mode = "function", inherits = TRUE)) {
-      stop(
-         paste0(
-            "The helper function `get_legend_title()` is not available.\n",
-            "This usually means the MKT analytics helper functions were not loaded.\n",
-            "Ask your instructor which package/script to load before using `easy_mp()` ",
-            "with an interaction term."
-         ),
-         call. = FALSE
-      )
-   }
-   
    # ---- y-axis label ----
-   
    dv_name <- all.vars(formula(model))[1]
    
    if (inherits(model, "lm")) {
       ylabel <- paste0(dv_name, " (Predicted)")
-   } else {  # glm with binomial family already checked above
+   } else {
       ylabel <- paste0(dv_name, " (Predicted Prob.)")
    }
    
    # ---- compute effects & build plots ----
-   
    if (plot.type == "cont.null") {
       
       fterm  <- paste0(focal, " [f.val]")
@@ -299,7 +244,7 @@ easy_mp <- function(model, focal, int = NULL) {
          ) +
          ggplot2::labs(
             y = ylabel,
-            x = get_x_title(ptable)
+            x = get_x_title(focal)
          ) +
          ggplot2::theme_bw()
       
@@ -324,7 +269,7 @@ easy_mp <- function(model, focal, int = NULL) {
          ) +
          ggplot2::labs(
             y = ylabel,
-            x = get_x_title(ptable)
+            x = get_x_title(focal)
          ) +
          scale_color_cvi_d("bgsu", n = colorn) +
          ggplot2::theme_bw() +
@@ -363,9 +308,9 @@ easy_mp <- function(model, focal, int = NULL) {
          scale_color_cvi_d("bgsu", n = 4) +
          ggplot2::labs(
             y     = ylabel,
-            x     = get_x_title(ptable),
-            color = get_legend_title(ptable),
-            fill  = get_legend_title(ptable)
+            x     = get_x_title(focal),
+            color = get_legend_title(int),
+            fill  = get_legend_title(int)
          ) +
          ggplot2::theme_bw() +
          ggplot2::theme(
@@ -375,7 +320,7 @@ easy_mp <- function(model, focal, int = NULL) {
       
    } else if (plot.type == "cont.cat") {
       
-      fterm  <- paste0(focal, " [n=50]")
+      fterm  <- paste0(focal, " [f.val]")
       iterm  <- int
       ptable <- ggeffects::ggeffect(model, terms = c(fterm, iterm))
       
@@ -405,9 +350,9 @@ easy_mp <- function(model, focal, int = NULL) {
          scale_color_cvi_d("bgsu", n = colorn) +
          ggplot2::labs(
             y     = ylabel,
-            x     = get_x_title(ptable),
-            color = get_legend_title(ptable),
-            fill  = get_legend_title(ptable)
+            x     = get_x_title(focal),
+            color = get_legend_title(int),
+            fill  = get_legend_title(int)
          ) +
          ggplot2::theme_bw() +
          ggplot2::theme(
@@ -421,7 +366,7 @@ easy_mp <- function(model, focal, int = NULL) {
       iterm  <- paste0(int, " [i.val]")
       ptable <- ggeffects::ggeffect(model, terms = c(fterm, iterm))
       
-      glabel   <- get_legend_title(ptable)
+      glabel   <- get_legend_title(int)
       appender <- function(string, prefix = glabel) paste0(prefix, "=", string)
       colorn   <- length(unique(ptable$x))
       
@@ -435,7 +380,7 @@ easy_mp <- function(model, focal, int = NULL) {
          ) +
          ggplot2::labs(
             y = ylabel,
-            x = get_x_title(ptable)
+            x = get_x_title(focal)
          ) +
          ggplot2::facet_wrap(
             ~group,
@@ -454,7 +399,7 @@ easy_mp <- function(model, focal, int = NULL) {
       iterm  <- int
       ptable <- ggeffects::ggeffect(model, terms = c(fterm, iterm))
       
-      glabel   <- get_legend_title(ptable)
+      glabel   <- get_legend_title(int)
       appender <- function(string, prefix = glabel) paste0(prefix, "=", string)
       colorn   <- length(unique(ptable$x))
       
@@ -468,7 +413,7 @@ easy_mp <- function(model, focal, int = NULL) {
          ) +
          ggplot2::labs(
             y = ylabel,
-            x = get_x_title(ptable)
+            x = get_x_title(focal)
          ) +
          ggplot2::facet_wrap(
             ~group,
