@@ -1,67 +1,82 @@
-#' @title Easy k-Means Clustering (Fit and Diagnostics)
+#' @title Easy k-Means Clustering (Fit & Diagnostics)
 #'
 #' @description
 #' Fit k-means clustering solutions across a range of cluster counts and compute
-#' common diagnostics including within-cluster sum of squares (WSS), average
-#' silhouette width, and the Gap statistic.
+#' common diagnostics to support segmentation decisions in marketing analytics.
 #'
 #' @details
-#' This function is designed for teaching and exploratory segmentation analysis.
-#' It consolidates functionality previously provided by \code{wssplot()} and
-#' \code{ksize()} into a single, reproducible workflow.
-#'
 #' Rows with missing values in the clustering variables are removed prior to
 #' fitting. The row indices used for clustering are stored internally so cluster
-#' assignments can be reattached to the original data if needed.
+#' membership can be reattached to the original dataset using
+#' \code{\link{easy_km_final}}.
+#'
+#' Diagnostic outputs include within-cluster sum of squares (WSS), average
+#' silhouette width, the Gap statistic (using the 1-SE rule), and cluster-size
+#' balance measures. A table of cluster size proportions is also returned to help
+#' assess whether candidate solutions contain very small or dominant clusters.
 #'
 #' @param data A data frame containing the full dataset.
-#' @param vars Character vector of variable names used for clustering. All
-#'   variables must be numeric.
-#' @param k_range Integer vector of cluster counts to evaluate (e.g.,
-#'   \code{1:10}).
-#' @param standardize Logical; if \code{TRUE}, clustering variables are
-#'   standardized before fitting k-means (default = \code{TRUE}).
-#' @param nstart Integer; number of random starts for k-means (default = 25).
-#' @param iter.max Integer; maximum number of iterations allowed for each
-#'   k-means run (passed to \code{stats::kmeans()}, default = 100).
-#' @param B Integer; number of Monte Carlo bootstrap samples for the Gap
-#'   statistic (passed to \code{cluster::clusGap()}, default = 20).
-
-#' @param seed Integer; random seed for reproducible results (default = 4320).
+#' @param vars Character vector of numeric variable names used for clustering.
+#' @param k_range Integer vector of cluster counts to evaluate
+#'   (default = \code{1:10}; allowed values 1--20).
+#' @param standardize Logical; if \code{TRUE} (default), clustering variables are
+#'   standardized before fitting k-means.
+#' @param nstart Integer; number of random starts for each k-means solution
+#'   (default = 25).
+#' @param iter.max Integer; maximum number of iterations allowed for each k-means
+#'   run (default = 100).
+#' @param B Integer; number of Monte Carlo bootstrap samples used to compute the
+#'   Gap statistic (default = 20).
+#' @param seed Integer; random seed for reproducible results
+#'   (default = 4320).
 #'
 #' @return
-#' A list with components:
+#' A list with the following components:
 #' \describe{
-#'   \item{scree}{Data frame of WSS values by number of clusters.}
-#'   \item{scree_plot}{A ggplot elbow (WSS) plot.}
-#'   \item{silhouette}{Data frame of average silhouette widths by cluster count.}
-#'   \item{gap}{Gap statistic results (including the 1-SE rule).}
-#'   \item{km_all}{Named list of fitted \code{kmeans} objects, indexed by the
-#'     number of clusters.}
-#'   \item{row_index}{Row indices of \code{data} used for clustering.}
+#'   \item{km_all}{Named list of fitted \code{\link[stats]{kmeans}} objects, indexed
+#'     by the number of clusters.}
+#'   \item{diag_raw}{A data frame of diagnostic statistics by number of clusters.}
+#'   \item{diag}{A formatted \code{\link[flextable]{flextable}} version of
+#'     \code{diag_raw}.}
+#'   \item{size_prop_raw}{A data frame of cluster size proportions for each
+#'     candidate solution. Rows correspond to cluster solutions and columns
+#'     correspond to cluster numbers (up to \code{max(k_range)}).}
+#'   \item{size_prop}{A formatted \code{\link[flextable]{flextable}} version of
+#'     \code{size_prop_raw}.}
+#'   \item{gap}{The full Gap statistic object returned by
+#'     \code{\link[cluster]{clusGap}}.}
+#'   \item{diss}{The distance matrix used to compute silhouette values.}
+#'   \item{scree_df}{Data frame of within-cluster sum of squares (WSS) by number
+#'     of clusters.}
+#'   \item{scree_plot}{Elbow (WSS) plot as a \code{ggplot} object.}
+#'   \item{data_scaled}{The standardized clustering data (or \code{NULL} if
+#'     \code{standardize = FALSE}).}
+#'   \item{settings}{A list of settings used to fit the k-means models.}
+#'   \item{key}{A list containing row-index information for rows used and dropped
+#'     during clustering.}
 #' }
 #'
 #' @examples
 #' \dontrun{
-#' # Basic k-means diagnostics
-#' res <- easy_km_fit(
-#'   data = mydata,
-#'   vars = c("price", "quality", "service"),
-#'   k_range = 1:8
+#' fit <- easy_km_fit(
+#'   data = ffseg,
+#'   vars = c("eatin", "hours", "health"),
+#'   k_range = 2:6
 #' )
 #'
-#' # Elbow plot
-#' res$scree_plot
+#' # Diagnostics table
+#' fit$diag
 #'
-#' # Examine fitted k-means for k = 4
-#' res$km_all[["4"]]
+#' # Cluster size proportions by solution
+#' fit$size_prop
 #' }
 #'
-#' @export
-#'
-#' @importFrom stats kmeans
-#' @importFrom cluster silhouette
+#' @importFrom stats kmeans sd
+#' @importFrom cluster silhouette clusGap
 #' @importFrom ggplot2 ggplot aes geom_line geom_point labs theme_bw
+#' @importFrom flextable flextable add_header_lines add_footer_lines
+#' @importFrom flextable align bold colformat_double autofit
+#' @export
 easy_km_fit <- function(data,
                         vars,
                         k_range     = 1:10,
@@ -219,6 +234,11 @@ easy_km_fit <- function(data,
       if (length(cand) > 0) is_gap_1se[cand[1]] <- TRUE
    }
    
+   # ---- cluster size proportions table (by k) ----
+   size_prop_mat <- matrix(NA_real_, nrow = length(k_range), ncol = k_max)
+   colnames(size_prop_mat) <- paste0("Cluster ", seq_len(k_max))
+   rownames(size_prop_mat) <- paste0(k_range, "-cluster solution")
+   
    # ---- cluster size diagnostics ----
    Small.Prop <- Large.Prop <- CV <- rep(NA_real_, length(k_range))
    names(Small.Prop) <- names(Large.Prop) <- names(CV) <- as.character(k_range)
@@ -226,13 +246,39 @@ easy_km_fit <- function(data,
    for (i in seq_along(k_range)) {
       k  <- k_range[i]
       km <- km_all[[as.character(k)]]
+      
       if (!is.null(km)) {
-         sz <- as.numeric(table(km$cluster))
+         tab <- table(km$cluster)
+         sz  <- as.numeric(tab)
+         
          Small.Prop[i] <- min(sz) / n_obs
          Large.Prop[i] <- max(sz) / n_obs
          CV[i] <- if (length(sz) > 1) stats::sd(sz) / mean(sz) else NA_real_
+         
+         # NEW: proportions for each cluster (1..k) stored in fixed-width matrix (1..k_max)
+         props <- as.numeric(tab) / sum(tab)
+         cl_ids <- as.integer(names(tab))   # should be 1..k
+         size_prop_mat[i, cl_ids] <- props
       }
    }
+  
+   # ---- size proportion tables ----
+   size_prop_raw <- data.frame(
+      Solution = rownames(size_prop_mat),
+      size_prop_mat,
+      row.names = NULL,
+      check.names = FALSE
+   )
+   
+   size_prop_ft <- flextable::flextable(size_prop_raw)
+   size_prop_ft <- flextable::add_header_lines(size_prop_ft, values = "Cluster Size Proportions by Solution")
+   size_prop_ft <- flextable::align(size_prop_ft, align = "center", part = "header")
+   size_prop_ft <- flextable::bold(size_prop_ft, part = "header")
+   size_prop_ft <- flextable::align(size_prop_ft, align = "right", part = "body")
+   size_prop_ft <- flextable::colformat_double(size_prop_ft, j = 2:ncol(size_prop_raw), digits = 4)
+   size_prop_ft <- flextable::autofit(size_prop_ft)
+   
+   
    
    # ---- build diagnostics table (raw) ----
    gap_for_k <- rep(NA_real_, length(k_range))
@@ -336,15 +382,18 @@ easy_km_fit <- function(data,
    )
    
    return(list(
-      km_all      = km_all,
-      diag_raw    = diag_raw,
-      diag        = ft,
-      gap         = gap_res,
-      diss        = diss,
-      scree_df    = scree_df,
-      scree_plot  = scree_plot,
-      data_scaled = data_scaled,
-      settings    = settings,
-      key         = key
+      km_all        = km_all,
+      diag_raw      = diag_raw,
+      diag          = ft,
+      size_prop_raw = size_prop_raw,  # NEW
+      size_prop     = size_prop_ft,   # NEW
+      gap           = gap_res,
+      diss          = diss,
+      scree_df      = scree_df,
+      scree_plot    = scree_plot,
+      data_scaled   = data_scaled,
+      settings      = settings,
+      key           = key
    ))
+   
 }

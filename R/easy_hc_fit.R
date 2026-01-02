@@ -1,65 +1,71 @@
 #' @title Easy Hierarchical Clustering (Fit & Diagnostics)
+#'
 #' @description
 #' Fit a hierarchical agglomerative clustering solution using selected numeric
 #' segmentation variables, compute stopping rules and cluster-balance diagnostics
-#' across a range of \code{k}, and (optionally) plot a dendrogram with cluster bars.
+#' across a range of cluster solutions, and optionally display a dendrogram.
 #'
 #' @details
-#' Rows with missing values in the segmentation variables are dropped for
-#' clustering. The indices of rows used (and dropped) are stored in \code{key}
-#' so that cluster membership can be reattached later via \code{\link{easy_hc_final}}.
+#' Rows with missing values in the segmentation variables are dropped prior to
+#' clustering. The indices of rows used (and dropped) are stored internally so
+#' cluster membership can be reattached later using
+#' \code{\link{easy_hc_final}}.
 #'
-#' Stopping/diagnostic outputs include Duda/Hart, pseudo-\eqn{t^2}, Gap statistic
-#' (1-SE rule), and cluster size balance flags (smallest cluster proportion,
-#' largest cluster proportion, and cluster size coefficient of variation).
+#' Diagnostic outputs include multiple stopping rules (Duda--Hart,
+#' pseudo-\eqn{t^2}, and the Gap statistic using the 1-SE rule) as well as
+#' cluster-size balance measures. A table of cluster size proportions is also
+#' returned to help assess whether candidate solutions contain very small or
+#' dominant clusters.
 #'
 #' @param data A data frame containing the full dataset.
 #' @param vars Character vector of numeric segmentation variable names.
-#' @param dist Distance measure. One of: \code{"euc"}, \code{"euc2"},
-#'   \code{"max"}, \code{"abs"}, \code{"bin"}.
-#' @param method Linkage method. One of: \code{"ward"}, \code{"single"},
-#'   \code{"complete"}, \code{"average"}.
-#' @param k_range Integer vector of cluster solutions to evaluate (default \code{1:10};
-#'   allowed \code{1}--\code{20}).
-#' @param standardize Logical; if \code{TRUE} (default), standardizes segmentation
-#'   variables prior to clustering.
-#' @param show_dend Logical; if \code{TRUE} (default), plots a dendrogram (skipped if
-#'   \code{n > dend_max_n}).
-#' @param dend_max_n Integer; maximum sample size for drawing a dendrogram (default 300).
+#' @param dist Distance measure. One of \code{"euc"}, \code{"euc2"},
+#'   \code{"max"}, \code{"abs"}, or \code{"bin"}.
+#' @param method Linkage method. One of \code{"ward"}, \code{"single"},
+#'   \code{"complete"}, or \code{"average"}.
+#' @param k_range Integer vector of cluster solutions to evaluate
+#'   (default = \code{1:10}; allowed values 1--20).
+#' @param standardize Logical; if \code{TRUE} (default), segmentation variables
+#'   are standardized prior to clustering.
+#' @param show_dend Logical; if \code{TRUE} (default), display a dendrogram
+#'   (suppressed automatically for large samples).
+#' @param dend_max_n Integer; maximum sample size for drawing a dendrogram
+#'   (default = 300).
 #'
 #' @return
-#' Invisibly returns a list with:
-#' \itemize{
-#'   \item \code{hc}: The \code{hclust} object.
-#'   \item \code{diss}: The distance object used for clustering.
-#'   \item \code{stop_raw}: A data frame of stopping indices and diagnostics by \code{k}.
-#'   \item \code{stop}: A formatted \code{flextable} version of \code{stop_raw}.
-#'   \item \code{data_scaled}: The standardized segmentation data (or \code{NULL} if not standardized).
-#'   \item \code{settings}: A list of settings used to fit the model.
-#'   \item \code{key}: A list containing row indices (\code{row_index_all}, \code{row_index_used}, \code{dropped_na}).
+#' A list with the following components:
+#' \describe{
+#'   \item{hc}{The fitted \code{\link[stats]{hclust}} object.}
+#'   \item{diss}{The distance object used for clustering.}
+#'   \item{stop_raw}{A data frame of stopping indices and balance diagnostics by
+#'     number of clusters.}
+#'   \item{stop}{A formatted \code{\link[flextable]{flextable}} version of
+#'     \code{stop_raw}.}
+#'   \item{size_prop_raw}{A data frame of cluster size proportions for each
+#'     candidate solution. Rows correspond to cluster solutions and columns
+#'     correspond to cluster numbers (up to \code{max(k_range)}).}
+#'   \item{size_prop}{A formatted \code{\link[flextable]{flextable}} version of
+#'     \code{size_prop_raw}.}
+#'   \item{data_scaled}{The standardized segmentation data (or \code{NULL} if
+#'     \code{standardize = FALSE}).}
+#'   \item{settings}{A list of settings used to fit the clustering model.}
+#'   \item{key}{A list containing row-index information for rows used and dropped
+#'     during clustering.}
 #' }
 #'
 #' @examples
 #' \dontrun{
-#' # Fit + diagnostics (dendrogram shown if n <= dend_max_n)
 #' fit <- easy_hc_fit(
 #'   data = ffseg,
 #'   vars = c("eatin", "hours", "health"),
-#'   dist = "euc",
-#'   method = "ward",
-#'   k_range = 2:10
+#'   k_range = 2:6
 #' )
 #'
-#' # View diagnostics table (flextable) and raw data.frame
+#' # Stopping rules and diagnostics
 #' fit$stop
-#' fit$stop_raw
 #'
-#' # Fit without dendrogram
-#' fit2 <- easy_hc_fit(
-#'   data = ffseg,
-#'   vars = c("eatin", "hours", "health"),
-#'   show_dend = FALSE
-#' )
+#' # Cluster size proportions by solution
+#' fit$size_prop
 #' }
 #'
 #' @importFrom stats dist hclust as.dendrogram cutree complete.cases sd
@@ -246,11 +252,26 @@ easy_hc_fit <- function(data,
    
    # ---- cluster size diagnostics ----
    Small.Prop <- Large.Prop <- CV <- numeric(length(k_seq))
+   
+   # ---- cluster size proportions table (by k) ----
+   size_prop_mat <- matrix(NA_real_, nrow = length(k_seq), ncol = k_max)
+   colnames(size_prop_mat) <- paste0("Cluster ", seq_len(k_max))
+   rownames(size_prop_mat) <- paste0(k_seq, "-cluster solution")
+   
    for (i in seq_along(k_seq)) {
-      sz <- as.numeric(table(stats::cutree(hc, k = k_seq[i])))
+      mem <- stats::cutree(hc, k = k_seq[i])
+      tab <- table(mem)
+      sz  <- as.numeric(tab)
+      
+      # existing diagnostics
       Small.Prop[i] <- min(sz) / n_obs
       Large.Prop[i] <- max(sz) / n_obs
       CV[i] <- if (length(sz) > 1) stats::sd(sz) / mean(sz) else NA_real_
+      
+      # NEW: proportions for each cluster (1..k for that solution), stored in fixed-width matrix (1..k_max)
+      props <- as.numeric(tab) / sum(tab)
+      cl_ids <- as.integer(names(tab))  # should be 1..k
+      size_prop_mat[i, cl_ids] <- props
    }
    
    stop_raw <- data.frame(
@@ -262,6 +283,22 @@ easy_hc_fit <- function(data,
       Large.Prop   = Large.Prop,
       CV           = CV
    )
+   
+   size_prop_raw <- data.frame(
+      Solution = rownames(size_prop_mat),
+      size_prop_mat,
+      row.names = NULL,
+      check.names = FALSE
+   )
+   
+   size_prop_ft <- flextable::flextable(size_prop_raw)
+   size_prop_ft <- flextable::add_header_lines(size_prop_ft, values = "Cluster Size Proportions by Solution")
+   size_prop_ft <- flextable::align(size_prop_ft, align = "center", part = "header")
+   size_prop_ft <- flextable::bold(size_prop_ft, part = "header")
+   size_prop_ft <- flextable::align(size_prop_ft, align = "right", part = "body")
+   size_prop_ft <- flextable::colformat_double(size_prop_ft, j = 2:ncol(size_prop_raw), digits = 4)
+   size_prop_ft <- flextable::autofit(size_prop_ft)
+   
    
    # ---- formatted symbol columns ----
    gap_char <- sprintf("%.4f", stop_raw$Gap.Stat)
@@ -350,8 +387,11 @@ easy_hc_fit <- function(data,
       diss        = diss,
       stop_raw    = stop_raw,
       stop        = ft,
+      size_prop_raw = size_prop_raw,   # NEW
+      size_prop     = size_prop_ft,    # NEW (flextable)
       data_scaled = data_scaled,
       settings    = settings,
       key         = key
    ))
+   
 }

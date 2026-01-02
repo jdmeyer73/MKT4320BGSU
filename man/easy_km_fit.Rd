@@ -2,7 +2,7 @@
 % Please edit documentation in R/easy_km_fit.R
 \name{easy_km_fit}
 \alias{easy_km_fit}
-\title{Easy k-Means Clustering (Fit and Diagnostics)}
+\title{Easy k-Means Clustering (Fit & Diagnostics)}
 \usage{
 easy_km_fit(
   data,
@@ -18,65 +18,80 @@ easy_km_fit(
 \arguments{
 \item{data}{A data frame containing the full dataset.}
 
-\item{vars}{Character vector of variable names used for clustering. All
-variables must be numeric.}
+\item{vars}{Character vector of numeric variable names used for clustering.}
 
-\item{k_range}{Integer vector of cluster counts to evaluate (e.g.,
-\code{1:10}).}
+\item{k_range}{Integer vector of cluster counts to evaluate
+(default = \code{1:10}; allowed values 1--20).}
 
-\item{standardize}{Logical; if \code{TRUE}, clustering variables are
-standardized before fitting k-means (default = \code{TRUE}).}
+\item{standardize}{Logical; if \code{TRUE} (default), clustering variables are
+standardized before fitting k-means.}
 
-\item{nstart}{Integer; number of random starts for k-means (default = 25).}
+\item{nstart}{Integer; number of random starts for each k-means solution
+(default = 25).}
 
-\item{iter.max}{Integer; maximum number of iterations allowed for each
-k-means run (passed to \code{stats::kmeans()}, default = 100).}
+\item{iter.max}{Integer; maximum number of iterations allowed for each k-means
+run (default = 100).}
 
-\item{B}{Integer; number of Monte Carlo bootstrap samples for the Gap
-statistic (passed to \code{cluster::clusGap()}, default = 20).}
+\item{B}{Integer; number of Monte Carlo bootstrap samples used to compute the
+Gap statistic (default = 20).}
 
-\item{seed}{Integer; random seed for reproducible results (default = 4320).}
+\item{seed}{Integer; random seed for reproducible results
+(default = 4320).}
 }
 \value{
-A list with components:
+A list with the following components:
 \describe{
-\item{scree}{Data frame of WSS values by number of clusters.}
-\item{scree_plot}{A ggplot elbow (WSS) plot.}
-\item{silhouette}{Data frame of average silhouette widths by cluster count.}
-\item{gap}{Gap statistic results (including the 1-SE rule).}
-\item{km_all}{Named list of fitted \code{kmeans} objects, indexed by the
-number of clusters.}
-\item{row_index}{Row indices of \code{data} used for clustering.}
+\item{km_all}{Named list of fitted \code{\link[stats]{kmeans}} objects, indexed
+by the number of clusters.}
+\item{diag_raw}{A data frame of diagnostic statistics by number of clusters.}
+\item{diag}{A formatted \code{\link[flextable]{flextable}} version of
+\code{diag_raw}.}
+\item{size_prop_raw}{A data frame of cluster size proportions for each
+candidate solution. Rows correspond to cluster solutions and columns
+correspond to cluster numbers (up to \code{max(k_range)}).}
+\item{size_prop}{A formatted \code{\link[flextable]{flextable}} version of
+\code{size_prop_raw}.}
+\item{gap}{The full Gap statistic object returned by
+\code{\link[cluster]{clusGap}}.}
+\item{diss}{The distance matrix used to compute silhouette values.}
+\item{scree_df}{Data frame of within-cluster sum of squares (WSS) by number
+of clusters.}
+\item{scree_plot}{Elbow (WSS) plot as a \code{ggplot} object.}
+\item{data_scaled}{The standardized clustering data (or \code{NULL} if
+\code{standardize = FALSE}).}
+\item{settings}{A list of settings used to fit the k-means models.}
+\item{key}{A list containing row-index information for rows used and dropped
+during clustering.}
 }
 }
 \description{
 Fit k-means clustering solutions across a range of cluster counts and compute
-common diagnostics including within-cluster sum of squares (WSS), average
-silhouette width, and the Gap statistic.
+common diagnostics to support segmentation decisions in marketing analytics.
 }
 \details{
-This function is designed for teaching and exploratory segmentation analysis.
-It consolidates functionality previously provided by \code{wssplot()} and
-\code{ksize()} into a single, reproducible workflow.
-
 Rows with missing values in the clustering variables are removed prior to
 fitting. The row indices used for clustering are stored internally so cluster
-assignments can be reattached to the original data if needed.
+membership can be reattached to the original dataset using
+\code{\link{easy_km_final}}.
+
+Diagnostic outputs include within-cluster sum of squares (WSS), average
+silhouette width, the Gap statistic (using the 1-SE rule), and cluster-size
+balance measures. A table of cluster size proportions is also returned to help
+assess whether candidate solutions contain very small or dominant clusters.
 }
 \examples{
 \dontrun{
-# Basic k-means diagnostics
-res <- easy_km_fit(
-  data = mydata,
-  vars = c("price", "quality", "service"),
-  k_range = 1:8
+fit <- easy_km_fit(
+  data = ffseg,
+  vars = c("eatin", "hours", "health"),
+  k_range = 2:6
 )
 
-# Elbow plot
-res$scree_plot
+# Diagnostics table
+fit$diag
 
-# Examine fitted k-means for k = 4
-res$km_all[["4"]]
+# Cluster size proportions by solution
+fit$size_prop
 }
 
 }

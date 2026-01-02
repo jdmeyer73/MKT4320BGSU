@@ -20,70 +20,75 @@ easy_hc_fit(
 
 \item{vars}{Character vector of numeric segmentation variable names.}
 
-\item{dist}{Distance measure. One of: \code{"euc"}, \code{"euc2"},
-\code{"max"}, \code{"abs"}, \code{"bin"}.}
+\item{dist}{Distance measure. One of \code{"euc"}, \code{"euc2"},
+\code{"max"}, \code{"abs"}, or \code{"bin"}.}
 
-\item{method}{Linkage method. One of: \code{"ward"}, \code{"single"},
-\code{"complete"}, \code{"average"}.}
+\item{method}{Linkage method. One of \code{"ward"}, \code{"single"},
+\code{"complete"}, or \code{"average"}.}
 
-\item{k_range}{Integer vector of cluster solutions to evaluate (default \code{1:10};
-allowed \code{1}--\code{20}).}
+\item{k_range}{Integer vector of cluster solutions to evaluate
+(default = \code{1:10}; allowed values 1--20).}
 
-\item{standardize}{Logical; if \code{TRUE} (default), standardizes segmentation
-variables prior to clustering.}
+\item{standardize}{Logical; if \code{TRUE} (default), segmentation variables
+are standardized prior to clustering.}
 
-\item{show_dend}{Logical; if \code{TRUE} (default), plots a dendrogram (skipped if
-\code{n > dend_max_n}).}
+\item{show_dend}{Logical; if \code{TRUE} (default), display a dendrogram
+(suppressed automatically for large samples).}
 
-\item{dend_max_n}{Integer; maximum sample size for drawing a dendrogram (default 300).}
+\item{dend_max_n}{Integer; maximum sample size for drawing a dendrogram
+(default = 300).}
 }
 \value{
-Invisibly returns a list with:
-\itemize{
-\item \code{hc}: The \code{hclust} object.
-\item \code{diss}: The distance object used for clustering.
-\item \code{stop_raw}: A data frame of stopping indices and diagnostics by \code{k}.
-\item \code{stop}: A formatted \code{flextable} version of \code{stop_raw}.
-\item \code{data_scaled}: The standardized segmentation data (or \code{NULL} if not standardized).
-\item \code{settings}: A list of settings used to fit the model.
-\item \code{key}: A list containing row indices (\code{row_index_all}, \code{row_index_used}, \code{dropped_na}).
+A list with the following components:
+\describe{
+\item{hc}{The fitted \code{\link[stats]{hclust}} object.}
+\item{diss}{The distance object used for clustering.}
+\item{stop_raw}{A data frame of stopping indices and balance diagnostics by
+number of clusters.}
+\item{stop}{A formatted \code{\link[flextable]{flextable}} version of
+\code{stop_raw}.}
+\item{size_prop_raw}{A data frame of cluster size proportions for each
+candidate solution. Rows correspond to cluster solutions and columns
+correspond to cluster numbers (up to \code{max(k_range)}).}
+\item{size_prop}{A formatted \code{\link[flextable]{flextable}} version of
+\code{size_prop_raw}.}
+\item{data_scaled}{The standardized segmentation data (or \code{NULL} if
+\code{standardize = FALSE}).}
+\item{settings}{A list of settings used to fit the clustering model.}
+\item{key}{A list containing row-index information for rows used and dropped
+during clustering.}
 }
 }
 \description{
 Fit a hierarchical agglomerative clustering solution using selected numeric
 segmentation variables, compute stopping rules and cluster-balance diagnostics
-across a range of \code{k}, and (optionally) plot a dendrogram with cluster bars.
+across a range of cluster solutions, and optionally display a dendrogram.
 }
 \details{
-Rows with missing values in the segmentation variables are dropped for
-clustering. The indices of rows used (and dropped) are stored in \code{key}
-so that cluster membership can be reattached later via \code{\link{easy_hc_final}}.
+Rows with missing values in the segmentation variables are dropped prior to
+clustering. The indices of rows used (and dropped) are stored internally so
+cluster membership can be reattached later using
+\code{\link{easy_hc_final}}.
 
-Stopping/diagnostic outputs include Duda/Hart, pseudo-\eqn{t^2}, Gap statistic
-(1-SE rule), and cluster size balance flags (smallest cluster proportion,
-largest cluster proportion, and cluster size coefficient of variation).
+Diagnostic outputs include multiple stopping rules (Duda--Hart,
+pseudo-\eqn{t^2}, and the Gap statistic using the 1-SE rule) as well as
+cluster-size balance measures. A table of cluster size proportions is also
+returned to help assess whether candidate solutions contain very small or
+dominant clusters.
 }
 \examples{
 \dontrun{
-# Fit + diagnostics (dendrogram shown if n <= dend_max_n)
 fit <- easy_hc_fit(
   data = ffseg,
   vars = c("eatin", "hours", "health"),
-  dist = "euc",
-  method = "ward",
-  k_range = 2:10
+  k_range = 2:6
 )
 
-# View diagnostics table (flextable) and raw data.frame
+# Stopping rules and diagnostics
 fit$stop
-fit$stop_raw
 
-# Fit without dendrogram
-fit2 <- easy_hc_fit(
-  data = ffseg,
-  vars = c("eatin", "hours", "health"),
-  show_dend = FALSE
-)
+# Cluster size proportions by solution
+fit$size_prop
 }
 
 }
