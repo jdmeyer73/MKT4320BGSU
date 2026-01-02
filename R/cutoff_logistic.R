@@ -45,6 +45,7 @@
 #' @importFrom stats predict family formula
 #' @importFrom ggplot2 ggplot aes geom_line scale_x_continuous scale_y_continuous
 #' @importFrom ggplot2 scale_color_manual labs theme_bw theme element_blank
+#' @export
 cutoff_logistic <- function(MOD,
                             DATA,
                             POSITIVE,
