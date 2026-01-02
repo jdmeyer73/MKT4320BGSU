@@ -116,18 +116,20 @@ easy_ab_ate <- function(model, treatment, ft = TRUE) {
             label = list(p.value ~ "p-value", r.squared = "R\u00B2")
          )
       
-      comp <- gtsummary::tbl_merge(
-         tbls = list(nocov, cov),
-         tab_spanner = c("Without\nCovariates", "With\nCovariates")
-      ) |>
-         gtsummary::modify_table_body(~ .x |> dplyr::arrange(row_type == "glance_statistic")) |>
-         gtsummary::as_flex_table() |>
-         flextable::bold(bold = TRUE, part = "header") |>
-         flextable::fontsize(i = 1, size = 14, part = "header") |>
-         flextable::fontsize(size = 12, part = "body") |>
-         flextable::height(part = "body", height = 4, unit = "mm") |>
-         flextable::hrule(part = "body", rule = "exact") |>
-         flextable::padding(padding.top = 1, padding.bottom = 1, part = "body")
+      comp <- suppressMessages(
+         gtsummary::tbl_merge(
+            tbls = list(nocov, cov),
+            tab_spanner = c("Without\nCovariates", "With\nCovariates")
+         ) |>
+            gtsummary::modify_table_body(~ .x |> dplyr::arrange(row_type == "glance_statistic")) |>
+            gtsummary::as_flex_table() |>
+            flextable::bold(bold = TRUE, part = "header") |>
+            flextable::fontsize(i = 1, size = 14, part = "header") |>
+            flextable::fontsize(size = 12, part = "body") |>
+            flextable::height(part = "body", height = 4, unit = "mm") |>
+            flextable::hrule(part = "body", rule = "exact") |>
+            flextable::padding(padding.top = 1, padding.bottom = 1, part = "body")
+      )
       
       return(comp)
    }
