@@ -46,7 +46,7 @@ asmnl_mp <- function(mod, focal, type = c("C", "D")) {
    .Deprecated(
       new = "pp_as_mnl",
       package = utils::packageName(),
-      msg = "asmnl_mp() is deprecated; use pp_as_mnl(OBJ, focal_var=...) and extract $pp_plot."
+      msg = "asmnl_mp() is deprecated; use pp_as_mnl(model, focal_var=...) and extract $pp_plot."
    )
    
    type <- match.arg(type)
@@ -60,7 +60,7 @@ asmnl_mp <- function(mod, focal, type = c("C", "D")) {
    
    # Legacy function was explicitly for CASE-specific vars; keep that behavior.
    res <- pp_as_mnl(
-      OBJ = mod,
+      model = mod,
       focal_var = focal,
       focal_type = "case",
       ft = FALSE,

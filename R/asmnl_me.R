@@ -65,7 +65,7 @@ asmnl_me <- function(mod,
    .Deprecated(
       new = "pp_as_mnl",
       package = utils::packageName(),
-      msg = "asmnl_me() is deprecated; use pp_as_mnl(OBJ, focal_var=...) instead."
+      msg = "asmnl_me() is deprecated; use pp_as_mnl(model, focal_var=...) instead."
    )
    
    me_method <- match.arg(me_method)
@@ -95,7 +95,7 @@ asmnl_me <- function(mod,
    
    for (v in vars) {
       out[[v]] <- pp_as_mnl(
-         OBJ = mod,
+         model = mod,
          focal_var = v,
          focal_type = "auto",
          digits = digits,

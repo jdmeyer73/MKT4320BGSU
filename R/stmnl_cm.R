@@ -37,7 +37,7 @@ stmnl_cm <- function(model, data) {
    # We want classification on *data*; eval_std_mnl always computes model-data too.
    # Use labels to identify which is which, then pull newdata results.
    res <- eval_std_mnl(
-      OBJ = model,
+      model = model,
       exp = FALSE,
       ft = FALSE,
       newdata = data,

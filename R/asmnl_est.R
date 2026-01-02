@@ -71,7 +71,7 @@ asmnl_est <- function(formula, data, id, alt, choice, testdata = NULL) {
    
    # ---- print evaluation using the new evaluator ----
    eval_res <- eval_as_mnl(
-      OBJ = mod,
+      model = mod,
       ft = FALSE,
       newdata = new_mdata,
       label_model = "Training data",
