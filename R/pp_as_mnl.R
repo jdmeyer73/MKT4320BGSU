@@ -20,7 +20,7 @@
 #' Case-specific and alternative-specific focal variables are handled
 #' automatically based on \code{focal_type}.
 #'
-#' @param OBJ A fitted \code{mlogit} model.
+#' @param model A fitted \code{mlogit} model.
 #' @param focal_var Character string. Name of the focal variable.
 #' @param focal_type Character; one of \code{"case"}, \code{"alt"}, or
 #'   \code{"auto"} (default).
@@ -57,7 +57,7 @@
 #'
 #' @export
 
-pp_as_mnl <- function(OBJ,
+pp_as_mnl <- function(model,
                       focal_var,
                       focal_type = c("auto", "alt", "case"),
                       grid_n = 25,
@@ -70,7 +70,7 @@ pp_as_mnl <- function(OBJ,
    # ----------------------------
    # Validate model + packages
    # ----------------------------
-   if (!inherits(OBJ, "mlogit")) stop("OBJ must be a fitted mlogit model (class 'mlogit').", call. = FALSE)
+   if (!inherits(model, "mlogit")) stop("`model` must be a fitted mlogit model (class 'mlogit').", call. = FALSE)
    
    if (!requireNamespace("dfidx", quietly = TRUE)) stop("Package 'dfidx' is required.", call. = FALSE)
    if (!requireNamespace("mlogit", quietly = TRUE)) stop("Package 'mlogit' is required.", call. = FALSE)
@@ -87,12 +87,9 @@ pp_as_mnl <- function(OBJ,
    
    focal_type <- match.arg(focal_type)
    me_method  <- match.arg(me_method)
-   
-   model <- OBJ
-   
    # training data only
    df_use <- model$model
-   if (is.null(df_use) || !inherits(df_use, "dfidx")) stop("Training dfidx data not found in OBJ$model.", call. = FALSE)
+   if (is.null(df_use) || !inherits(df_use, "dfidx")) stop("Training dfidx data not found in model$model.", call. = FALSE)
    label_data <- "Model data"
    
    # ----------------------------

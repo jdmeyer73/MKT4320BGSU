@@ -5,7 +5,7 @@
 \title{Predicted Probabilities and Marginal Effects for Alternative-Specific MNL}
 \usage{
 pp_as_mnl(
-  OBJ,
+  model,
   focal_var,
   focal_type = c("auto", "alt", "case"),
   grid_n = 25,
@@ -17,7 +17,7 @@ pp_as_mnl(
 )
 }
 \arguments{
-\item{OBJ}{A fitted \code{mlogit} model.}
+\item{model}{A fitted \code{mlogit} model.}
 
 \item{focal_var}{Character string. Name of the focal variable.}
 

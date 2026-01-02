@@ -2,7 +2,7 @@
 % Please edit documentation in R/splitsample.R
 \name{splitsample}
 \alias{splitsample}
-\title{Split a Dataset into Training and Test Samples}
+\title{Split Sample}
 \usage{
 splitsample(
   data,
@@ -15,67 +15,66 @@ splitsample(
 )
 }
 \arguments{
-\item{data}{A data frame to split.}
+\item{data}{A data frame.}
 
-\item{outcome}{Outcome variable used for stratification. Required when
-\code{group} is \code{NULL}. Optional when \code{group} is provided.}
+\item{outcome}{Character string naming the factor outcome variable.
+Required when \code{group} is NULL. Ignored otherwise.}
 
-\item{group}{Optional grouping variable (e.g., choice situation id or respondent id).
-If provided, splitting is done at the group level.}
-
-\item{choice}{Optional 0/1 (or \code{TRUE}/\code{FALSE}) indicator for the chosen
-alternative. Used only when \code{group} is provided.}
-
-\item{alt}{Optional alternative label/ID. Used with \code{choice} to stratify
+\item{group}{Optional character string naming a grouping variable
+(e.g., choice set id or respondent id). If provided, splitting is done
 at the group level.}
 
-\item{p}{Proportion of observations (or groups) to place in the training set.
-Must be strictly between 0 and 1. Default is 0.75.}
+\item{choice}{Optional character string naming the chosen indicator
+(0/1, TRUE/FALSE, or common yes-like strings). Used only when \code{group}
+is provided (to create \code{train.mdata}/\code{test.mdata} and/or stratify groups).}
 
-\item{seed}{Random seed for reproducibility. Default is 4320.}
+\item{alt}{Optional character string naming the alternative label/ID.
+Used with \code{choice} when \code{group} is provided.}
+
+\item{p}{Proportion for the training split (strictly between 0 and 1).}
+
+\item{seed}{Random seed for reproducibility.}
 }
 \value{
-An (invisible) list with elements \code{train} and \code{test}. When
-\code{group} is provided, also returns \code{train_groups} and
-\code{test_groups}.
+A list containing \code{train} and \code{test}.
+When \code{group} is provided, also returns \code{train_groups}, \code{test_groups},
+and (if possible) \code{train.mdata}, \code{test.mdata}.
 }
 \description{
-Create training and test samples from a data frame. The function supports
-both a classic row-level split (stratified by a factor outcome) and a
-group-level split that keeps all rows from the same group together.
+Create training and test samples from a data set.
+
+If \code{group} is NULL, this function performs a classic row-level split and
+requires a \emph{factor} \code{outcome} (stratified split).
+
+If \code{group} is provided, the split is done at the group level so all rows
+belonging to the same group are kept together (useful for long-format
+alternative-specific choice data).
+
+If \code{group} is provided AND \code{choice} + \code{alt} are also provided, the function
+additionally returns \code{train.mdata} and \code{test.mdata} as \code{dfidx} objects
+(ready for \code{mlogit::mlogit()}), created via \code{dfidx::dfidx()}.
 }
 \details{
-\strong{Row-level split (default):} If \code{group} is \code{NULL}, the function
-performs a row-level split and requires \code{outcome} to be a factor; the
-split is stratified on outcome levels using \code{caret::createDataPartition()}.
-
-\strong{Group-level split:} If \code{group} is provided, splitting is done at the
-group level so all rows belonging to the same group are assigned to the same
-partition (useful for long-format data such as alternative-specific choice
-data).
-
-Group-level stratification is attempted when:
+Required packages:
 \itemize{
-\item \code{choice} and \code{alt} are provided (stratify by chosen alternative), or
-\item \code{outcome} is provided and is a factor that is effectively constant within group.
+\item caret
+\item dfidx (only needed when \code{group} + \code{choice} + \code{alt} are used)
 }
-If stratification labels are not available, groups are split by simple random
-sampling.
 }
 \examples{
 \dontrun{
-# --- Classic row-level split (stratified by factor outcome) ---
-directmktg$buy <- factor(directmktg$buy, levels = c("no", "yes"))
-sp <- splitsample(directmktg, outcome = buy)
-train <- sp$train
-test  <- sp$test
+# --- Classic classification split (row-level) ---
+directmktg$buy <- factor(directmktg$buy, levels = c("no","yes"))
+splits <- splitsample(directmktg, outcome = "buy")
+train <- splits$train
+test  <- splits$test
 
-# --- Group-level split (keep each choice set together) ---
-sp2 <- splitsample(my_long, group = chid, choice = choice, alt = alt, p = 0.8)
-train2 <- sp2$train
-test2  <- sp2$test
+# --- Long-format AS-MNL split (group-level) ---
+# group = choice situation id (chid); also create dfidx objects
+splits2 <- splitsample(my_long, group = "chid", choice = "choice", alt = "alt", p = 0.8)
 
-# --- Group-level split by respondent (keep all rows per person together) ---
-sp3 <- splitsample(my_long, group = id, choice = choice, alt = alt)
+# Students then estimate on splits2$train.mdata
+# mod <- mlogit::mlogit(choice ~ price + promo | 0, data = splits2$train.mdata)
 }
+
 }

@@ -1,152 +1,149 @@
-#' Split a Dataset into Training and Test Samples
-#'
+#' @title Split Sample
 #' @description
-#' Create training and test samples from a data frame. The function supports
-#' both a classic row-level split (stratified by a factor outcome) and a
-#' group-level split that keeps all rows from the same group together.
+#' Create training and test samples from a data set.
+#'
+#' If `group` is NULL, this function performs a classic row-level split and
+#' requires a *factor* `outcome` (stratified split).
+#'
+#' If `group` is provided, the split is done at the group level so all rows
+#' belonging to the same group are kept together (useful for long-format
+#' alternative-specific choice data).
+#'
+#' If `group` is provided AND `choice` + `alt` are also provided, the function
+#' additionally returns `train.mdata` and `test.mdata` as `dfidx` objects
+#' (ready for `mlogit::mlogit()`), created via `dfidx::dfidx()`.
 #'
 #' @details
-#' **Row-level split (default):** If \code{group} is \code{NULL}, the function
-#' performs a row-level split and requires \code{outcome} to be a factor; the
-#' split is stratified on outcome levels using \code{caret::createDataPartition()}.
-#'
-#' **Group-level split:** If \code{group} is provided, splitting is done at the
-#' group level so all rows belonging to the same group are assigned to the same
-#' partition (useful for long-format data such as alternative-specific choice
-#' data).
-#'
-#' Group-level stratification is attempted when:
+#' Required packages:
 #' \itemize{
-#'   \item \code{choice} and \code{alt} are provided (stratify by chosen alternative), or
-#'   \item \code{outcome} is provided and is a factor that is effectively constant within group.
+#'   \item caret
+#'   \item dfidx (only needed when `group` + `choice` + `alt` are used)
 #' }
-#' If stratification labels are not available, groups are split by simple random
-#' sampling.
 #'
-#' @param data A data frame to split.
-#' @param outcome Outcome variable used for stratification. Required when
-#'   \code{group} is \code{NULL}. Optional when \code{group} is provided.
-#' @param group Optional grouping variable (e.g., choice situation id or respondent id).
-#'   If provided, splitting is done at the group level.
-#' @param choice Optional 0/1 (or \code{TRUE}/\code{FALSE}) indicator for the chosen
-#'   alternative. Used only when \code{group} is provided.
-#' @param alt Optional alternative label/ID. Used with \code{choice} to stratify
+#' @param data A data frame.
+#' @param outcome Character string naming the factor outcome variable.
+#'   Required when `group` is NULL. Ignored otherwise.
+#' @param group Optional character string naming a grouping variable
+#'   (e.g., choice set id or respondent id). If provided, splitting is done
 #'   at the group level.
-#' @param p Proportion of observations (or groups) to place in the training set.
-#'   Must be strictly between 0 and 1. Default is 0.75.
-#' @param seed Random seed for reproducibility. Default is 4320.
+#' @param choice Optional character string naming the chosen indicator
+#'   (0/1, TRUE/FALSE, or common yes-like strings). Used only when `group`
+#'   is provided (to create `train.mdata`/`test.mdata` and/or stratify groups).
+#' @param alt Optional character string naming the alternative label/ID.
+#'   Used with `choice` when `group` is provided.
+#' @param p Proportion for the training split (strictly between 0 and 1).
+#' @param seed Random seed for reproducibility.
 #'
-#' @return
-#' An (invisible) list with elements \code{train} and \code{test}. When
-#' \code{group} is provided, also returns \code{train_groups} and
-#' \code{test_groups}.
-#'
-#' @export
-#'
-#' @importFrom caret createDataPartition
-#' @importFrom rlang ensym as_name
+#' @return A list containing `train` and `test`.
+#' When `group` is provided, also returns `train_groups`, `test_groups`,
+#' and (if possible) `train.mdata`, `test.mdata`.
 #'
 #' @examples
 #' \dontrun{
-#' # --- Classic row-level split (stratified by factor outcome) ---
-#' directmktg$buy <- factor(directmktg$buy, levels = c("no", "yes"))
-#' sp <- splitsample(directmktg, outcome = buy)
-#' train <- sp$train
-#' test  <- sp$test
+#' # --- Classic classification split (row-level) ---
+#' directmktg$buy <- factor(directmktg$buy, levels = c("no","yes"))
+#' splits <- splitsample(directmktg, outcome = "buy")
+#' train <- splits$train
+#' test  <- splits$test
 #'
-#' # --- Group-level split (keep each choice set together) ---
-#' sp2 <- splitsample(my_long, group = chid, choice = choice, alt = alt, p = 0.8)
-#' train2 <- sp2$train
-#' test2  <- sp2$test
+#' # --- Long-format AS-MNL split (group-level) ---
+#' # group = choice situation id (chid); also create dfidx objects
+#' splits2 <- splitsample(my_long, group = "chid", choice = "choice", alt = "alt", p = 0.8)
 #'
-#' # --- Group-level split by respondent (keep all rows per person together) ---
-#' sp3 <- splitsample(my_long, group = id, choice = choice, alt = alt)
+#' # Students then estimate on splits2$train.mdata
+#' # mod <- mlogit::mlogit(choice ~ price + promo | 0, data = splits2$train.mdata)
 #' }
+#'
+#' @importFrom caret createDataPartition
+#' @export
 splitsample <- function(data,
                         outcome = NULL,
-                        group = NULL,
-                        choice = NULL,
-                        alt = NULL,
-                        p = 0.75,
-                        seed = 4320) {
+                        group   = NULL,
+                        choice  = NULL,
+                        alt     = NULL,
+                        p       = 0.75,
+                        seed    = 4320) {
    
-   # --- checks ---
-   if (!is.data.frame(data)) {
-      stop("`data` must be a data frame.", call. = FALSE)
+   # ---- helpers ----
+   is_scalar_string <- function(x) is.character(x) && length(x) == 1 && !is.na(x) && nzchar(x)
+   
+   assert_col_string <- function(x, arg) {
+      if (is.null(x)) return(invisible(NULL))
+      if (!is_scalar_string(x)) {
+         stop(sprintf("`%s` must be a single character string (e.g., \"%s\").", arg, arg), call. = FALSE)
+      }
+      invisible(NULL)
    }
    
-   if (!is.numeric(p) || length(p) != 1L || !is.finite(p) || p <= 0 || p >= 1) {
+   assert_has_col <- function(df, col, arg) {
+      if (!col %in% names(df)) {
+         stop(sprintf("`%s` '%s' not found in `data`.", arg, col), call. = FALSE)
+      }
+      invisible(NULL)
+   }
+   
+   # robust "is chosen?" converter
+   as_chosen_logical <- function(x) {
+      if (is.logical(x)) return(x)
+      
+      if (is.numeric(x) || is.integer(x)) {
+         return(!is.na(x) & x == 1)
+      }
+      
+      xx <- tolower(trimws(as.character(x)))
+      yes_vals <- c("yes","y","true","t","1","chosen","choice","select","selected")
+      out <- xx %in% yes_vals
+      out[is.na(xx) | xx == ""] <- FALSE
+      out
+   }
+   
+   # ---- validate basics ----
+   if (!is.data.frame(data)) stop("`data` must be a data frame.", call. = FALSE)
+   if (!is.numeric(p) || length(p) != 1 || p <= 0 || p >= 1) {
       stop("`p` must be a single number strictly between 0 and 1.", call. = FALSE)
    }
+   
+   # Require names as strings (when provided)
+   assert_col_string(outcome, "outcome")
+   assert_col_string(group,   "group")
+   assert_col_string(choice,  "choice")
+   assert_col_string(alt,     "alt")
    
    set.seed(seed)
    
    # ============================================================
-   # CASE 1: GROUP-LEVEL SPLIT (long-format safe)
+   # CASE 1: GROUP-LEVEL SPLIT
    # ============================================================
    if (!is.null(group)) {
       
-      group_name <- rlang::as_name(rlang::ensym(group))
-      if (!group_name %in% names(data)) {
-         stop(sprintf("Group variable '%s' not found in `data`.", group_name), call. = FALSE)
-      }
+      assert_has_col(data, group, "group")
       
-      groups <- unique(data[[group_name]])
+      groups <- unique(data[[group]])
       groups <- groups[!is.na(groups)]
-      if (length(groups) < 2L) {
-         stop("`group` must have at least 2 non-missing unique values.", call. = FALSE)
-      }
+      if (length(groups) < 2) stop("`group` must have at least 2 unique values.", call. = FALSE)
       
-      # ---- optional stratification label at group level ----
+      have_choice_alt <- !is.null(choice) && !is.null(alt)
+      
+      # Optional stratification label at group level (based on chosen alternative)
       y_group <- NULL
       
-      # Preferred for choice data: stratify by the chosen alternative within each group
-      if (!is.null(choice) && !is.null(alt)) {
+      if (have_choice_alt) {
+         assert_has_col(data, choice, "choice")
+         assert_has_col(data, alt,    "alt")
          
-         choice_name <- rlang::as_name(rlang::ensym(choice))
-         alt_name    <- rlang::as_name(rlang::ensym(alt))
+         ch <- as_chosen_logical(data[[choice]])
          
-         if (!choice_name %in% names(data)) {
-            stop(sprintf("`choice` '%s' not found in `data`.", choice_name), call. = FALSE)
-         }
-         if (!alt_name %in% names(data)) {
-            stop(sprintf("`alt` '%s' not found in `data`.", alt_name), call. = FALSE)
-         }
-         
-         # Coerce choice safely to integer 0/1
-         ch <- data[[choice_name]]
-         ch <- if (is.logical(ch)) as.integer(ch) else suppressWarnings(as.integer(ch))
-         
-         chosen_alt <- tapply(seq_len(nrow(data)), data[[group_name]], function(idx) {
-            idx1 <- idx[which(ch[idx] == 1L)]
-            if (length(idx1) == 0L) return(NA)
-            data[[alt_name]][idx1[1L]]
+         chosen_alt <- tapply(seq_len(nrow(data)), data[[group]], function(idx) {
+            idx1 <- idx[ch[idx]]
+            if (length(idx1) == 0) return(NA_character_)
+            as.character(data[[alt]][idx1[1]])
          })
          
-         # Use stratification only if we have enough non-missing labels
          nonmiss <- !is.na(chosen_alt)
-         if (sum(nonmiss) >= max(2L, round(0.5 * length(chosen_alt)))) {
-            y_group <- as.factor(chosen_alt[nonmiss])
-         }
+         if (sum(nonmiss) >= 2) y_group <- as.factor(chosen_alt[nonmiss])
       }
       
-      # If user supplied a factor outcome and wants group-level stratification from it:
-      # (only works cleanly if outcome is effectively constant within group)
-      if (is.null(y_group) && !is.null(outcome)) {
-         outcome_name <- rlang::as_name(rlang::ensym(outcome))
-         if (!outcome_name %in% names(data)) {
-            stop(sprintf("Outcome variable '%s' not found in `data`.", outcome_name), call. = FALSE)
-         }
-         
-         if (is.factor(data[[outcome_name]])) {
-            first_out <- tapply(seq_len(nrow(data)), data[[group_name]], function(idx) {
-               data[[outcome_name]][idx[1L]]
-            })
-            y_group <- as.factor(first_out[!is.na(first_out)])
-         }
-      }
-      
-      # ---- partition groups ----
+      # Split groups
       if (!is.null(y_group)) {
          inTrain <- caret::createDataPartition(y = y_group, p = p, list = FALSE)
          grp_names <- names(y_group)
@@ -158,14 +155,43 @@ splitsample <- function(data,
          test_groups  <- setdiff(groups, train_groups)
       }
       
-      train <- data[data[[group_name]] %in% train_groups, , drop = FALSE]
-      test  <- data[data[[group_name]] %in% test_groups,  , drop = FALSE]
+      train <- data[data[[group]] %in% train_groups, , drop = FALSE]
+      test  <- data[data[[group]] %in% test_groups,  , drop = FALSE]
+      
+      # dfidx objects (optional)
+      train_mdata <- NULL
+      test_mdata  <- NULL
+      
+      if (have_choice_alt) {
+         if (!requireNamespace("dfidx", quietly = TRUE)) {
+            stop("Package 'dfidx' is required to create `train.mdata`/`test.mdata`.", call. = FALSE)
+         }
+         
+         train2 <- train
+         test2  <- test
+         train2[[choice]] <- as_chosen_logical(train2[[choice]])
+         test2[[choice]]  <- as_chosen_logical(test2[[choice]])
+         
+         chosen_per_case <- tapply(train2[[choice]], train2[[group]], sum, na.rm = TRUE)
+         
+         if (any(chosen_per_case != 1)) {
+            warning(
+               "Not creating train.mdata/test.mdata: some groups do not have exactly one chosen alternative.",
+               call. = FALSE
+            )
+         } else {
+            train_mdata <- dfidx::dfidx(train2, idx = c(group, alt), choice = choice)
+            test_mdata  <- dfidx::dfidx(test2,  idx = c(group, alt), choice = choice)
+         }
+      }
       
       return(invisible(list(
          train = train,
          test = test,
          train_groups = train_groups,
-         test_groups = test_groups
+         test_groups = test_groups,
+         train.mdata = train_mdata,
+         test.mdata = test_mdata
       )))
    }
    
@@ -173,38 +199,14 @@ splitsample <- function(data,
    # CASE 2: CLASSIC ROW-LEVEL SPLIT
    # ============================================================
    if (is.null(outcome)) {
-      stop("When `group` is NULL, you must provide `outcome`.", call. = FALSE)
+      stop("When `group` is NULL, you must provide `outcome` as a string.", call. = FALSE)
    }
    
-   outcome_name <- rlang::as_name(rlang::ensym(outcome))
+   assert_has_col(data, outcome, "outcome")
+   if (!is.factor(data[[outcome]])) stop("Outcome must be a factor.", call. = FALSE)
    
-   if (!outcome_name %in% names(data)) {
-      stop(sprintf("Outcome variable '%s' not found in `data`.", outcome_name), call. = FALSE)
-   }
-   
-   # enforce factor outcome (original behavior)
-   if (!is.factor(data[[outcome_name]])) {
-      stop(
-         paste0(
-            "The outcome variable '", outcome_name, "' must be a FACTOR.\n",
-            "It appears to be numeric or character.\n",
-            "Convert it first, for example:\n\n",
-            "  data$", outcome_name, " <- factor(data$", outcome_name, ")\n\n",
-            "or, if binary classification:\n",
-            "  data$", outcome_name, " <- factor(data$", outcome_name,
-            ", levels = c('no','yes'))\n"
-         ),
-         call. = FALSE
-      )
-   }
-   
-   inTrain <- caret::createDataPartition(
-      y    = data[[outcome_name]],
-      p    = p,
-      list = FALSE
-   )
-   
-   train <- data[inTrain, , drop = FALSE]
+   inTrain <- caret::createDataPartition(y = data[[outcome]], p = p, list = FALSE)
+   train <- data[inTrain,  , drop = FALSE]
    test  <- data[-inTrain, , drop = FALSE]
    
    invisible(list(train = train, test = test))

@@ -5,7 +5,7 @@
 \title{Evaluate a Fitted Alternative-Specific MNL (Fit + Coefs + Classification)}
 \usage{
 eval_as_mnl(
-  OBJ,
+  model,
   digits = 4,
   ft = FALSE,
   newdata = NULL,
@@ -15,7 +15,7 @@ eval_as_mnl(
 )
 }
 \arguments{
-\item{OBJ}{A fitted \code{mlogit} model.}
+\item{model}{A fitted \code{mlogit} model.}
 
 \item{digits}{Integer; decimals to round coefficient and fit results (default 4).}
 

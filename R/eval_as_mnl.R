@@ -20,7 +20,7 @@
 #' For holdout evaluation, pass \code{newdata} as a \code{dfidx} object
 #' (recommended: \code{test.mdata} from \code{splitsample()}).
 #'
-#' @param OBJ A fitted \code{mlogit} model.
+#' @param model A fitted \code{mlogit} model.
 #' @param digits Integer; decimals to round coefficient and fit results (default 4).
 #' @param ft Logical; if \code{TRUE}, return coefficient and classification tables
 #'   as \code{flextable} objects (default \code{FALSE}).
@@ -47,8 +47,7 @@
 #' @importFrom flextable flextable autofit add_header_lines add_header_row
 #'
 #' @export
-
-eval_as_mnl <- function(OBJ,
+eval_as_mnl <- function(model,
                         digits = 4,
                         ft = FALSE,
                         newdata = NULL,
@@ -59,8 +58,8 @@ eval_as_mnl <- function(OBJ,
    # ----------------------------
    # Validate model
    # ----------------------------
-   if (!inherits(OBJ, "mlogit")) {
-      stop("OBJ must be a fitted mlogit model (class 'mlogit').", call. = FALSE)
+   if (!inherits(model, "mlogit")) {
+      stop("`model` must be a fitted mlogit model (class 'mlogit').", call. = FALSE)
    }
    if (!requireNamespace("dfidx", quietly = TRUE)) {
       stop("Package 'dfidx' is required.", call. = FALSE)
@@ -75,7 +74,6 @@ eval_as_mnl <- function(OBJ,
       stop("Package 'caret' is required.", call. = FALSE)
    }
    
-   model <- OBJ
    fmt <- function(x, d) format(round(x, d), nsmall = d)
    
    # ----------------------------
@@ -315,7 +313,7 @@ eval_as_mnl <- function(OBJ,
       
       if (!isTRUE(ft)) return(out)
       
-      # flextable combined layout (same structure as eval_std_mnl) :contentReference[oaicite:3]{index=3}
+      # flextable combined layout (same structure as eval_std_mnl)
       cm_df <- as.data.frame(mat_tot, stringsAsFactors = FALSE)
       cm_df <- cbind(Predicted = rownames(mat_tot), cm_df)
       rownames(cm_df) <- NULL
@@ -397,23 +395,27 @@ eval_as_mnl <- function(OBJ,
 #' @export
 print.eval_as_mnl <- function(x, ...) {
    
-   # ---- Print fit first (mimic eval_std_mnl style) ----
-   p_txt <- if (is.na(x$fit$p_value)) {
-      "NA"
-   } else if (x$fit$p_value < 1e-4) {
-      "< 0.0001"
-   } else {
-      format(round(x$fit$p_value, 4), nsmall = 4)
+   # If ft=TRUE, LR chi2 + McFadden R2 are already embedded as header lines
+   # in the coefficient flextable, so avoid printing them again to console.
+   if (!inherits(x$coef_table, "flextable")) {
+      
+      p_txt <- if (is.na(x$fit$p_value)) {
+         "NA"
+      } else if (x$fit$p_value < 1e-4) {
+         "< 0.0001"
+      } else {
+         format(round(x$fit$p_value, 4), nsmall = 4)
+      }
+      
+      cat(
+         "LR chi2 (", x$fit$df, ") = ", format(x$fit$LR_Chi2, nsmall = 4),
+         "; p ", p_txt, "\n",
+         sep = ""
+      )
+      cat("McFadden's Pseudo R-square = ",
+          format(x$fit$McFadden_R2, nsmall = 4),
+          "\n\n", sep = "")
    }
-   
-   cat(
-      "LR chi2 (", x$fit$df, ") = ", format(x$fit$LR_Chi2, nsmall = 4),
-      "; p ", p_txt, "\n",
-      sep = ""
-   )
-   cat("McFadden's Pseudo R-square = ",
-       format(x$fit$McFadden_R2, nsmall = 4),
-       "\n\n", sep = "")
    
    # ---- Then coefficients ----
    if (inherits(x$coef_table, "flextable")) {
