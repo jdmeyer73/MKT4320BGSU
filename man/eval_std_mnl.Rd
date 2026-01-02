@@ -5,7 +5,7 @@
 \title{Evaluate a Standard Multinomial Logit Model}
 \usage{
 eval_std_mnl(
-  OBJ,
+  model,
   exp = FALSE,
   digits = 4,
   ft = FALSE,
@@ -17,14 +17,14 @@ eval_std_mnl(
 )
 }
 \arguments{
-\item{OBJ}{A fitted \code{nnet::multinom} model.}
+\item{model}{A fitted \code{nnet::multinom} model.}
 
 \item{exp}{Logical; if \code{TRUE}, return relative risk ratios
 (\code{exp(beta)}). If \code{FALSE}, return log-odds coefficients
 (default = \code{FALSE}).}
 
 \item{digits}{Integer; number of decimals used to round coefficient and
-model-fit results (default = 4).}
+model-fit results (default = \code{4}).}
 
 \item{ft}{Logical; if \code{TRUE}, return coefficient and classification
 tables as \code{flextable} objects (default = \code{FALSE}).}
@@ -40,7 +40,7 @@ output (default = \code{"Model data"}).}
 classification output (default = \code{"New data"}).}
 
 \item{class_digits}{Integer; number of decimals used to round classification
-statistics (default = 3).}
+statistics (default = \code{3}).}
 
 \item{...}{Additional arguments passed to the intercept-only
 \code{nnet::multinom()} fit used for the likelihood-ratio test.}
@@ -55,6 +55,7 @@ p-value, and McFadden's pseudo R-squared.}
 \item{coef_table_df}{Coefficient table as a plain data frame (always).}
 \item{classify}{List containing classification results for the model data
 and, if supplied, \code{newdata}.}
+\item{ft}{Logical; whether output tables were requested as flextables.}
 }
 }
 \description{
@@ -77,22 +78,24 @@ stored in the fitted object. For this reason, the multinomial logit should be
 estimated with \code{model = TRUE}.
 
 Classification uses predicted classes from
-\code{predict(OBJ, type = "class")}. Accuracy, PCC, and one-vs-rest
+\code{predict(model, type = "class")}. Accuracy, PCC, and one-vs-rest
 Sensitivity, Specificity, and Precision are reported.
 }
 \examples{
 \dontrun{
-model <- nnet::multinom(choice ~ price + promo,
-                         data = mydata,
-                         model = TRUE,
-                         trace = FALSE)
+mnl_fit <- nnet::multinom(
+  choice ~ price + promo,
+  data  = mydata,
+  model = TRUE,
+  trace = FALSE
+)
 
-res <- eval_std_mnl(model)
+res <- eval_std_mnl(mnl_fit)
 res$fit
 res$coef_table
 
 # With holdout classification
-eval_std_mnl(model, newdata = testdata)
+eval_std_mnl(mnl_fit, newdata = testdata)
 }
 
 }

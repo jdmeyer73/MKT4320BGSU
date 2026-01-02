@@ -108,16 +108,26 @@ pp_std_mnl <- function(model,
       pred_full <- data.frame(effects::predictorEffect(focal, model))
       tab <- reshape_effect_df(pred_full)
       
-      plot <- ggplot2::ggplot(tab, ggplot2::aes_string(x = focal, y = "p.prob", group = 1)) +
+      plot <- ggplot2::ggplot(
+         tab,
+         ggplot2::aes(x = .data[[focal]], y = p.prob, group = 1)
+      ) +
          ggplot2::geom_point(size = 2) +
          ggplot2::geom_line() +
-         ggplot2::geom_errorbar(ggplot2::aes(ymin = lower.CI, ymax = upper.CI), width = 0.1) +
-         ggplot2::facet_wrap(stats::as.formula(paste0("~`", dv_name, "`")), ncol = 2) +
+         ggplot2::geom_errorbar(
+            ggplot2::aes(ymin = lower.CI, ymax = upper.CI),
+            width = 0.1
+         ) +
+         ggplot2::facet_wrap(
+            stats::as.formula(paste0("~`", dv_name, "`")),
+            ncol = 2
+         ) +
          ggplot2::labs(
             y = "Predicted Probability",
             x = ifelse(is.null(xlab), focal, xlab)
          ) +
          ggplot2::theme_bw()
+      
       
       if (isTRUE(ft_table)) {
          tab <- flextable::flextable(tab) |> flextable::autofit()
@@ -143,17 +153,25 @@ pp_std_mnl <- function(model,
       
       plot <- ggplot2::ggplot(
          plong_full,
-         ggplot2::aes_string(x = focal, y = "p.prob", color = dv_name, fill = dv_name)
+         ggplot2::aes(
+            x     = .data[[focal]],
+            y     = p.prob,
+            color = .data[[dv_name]],
+            fill  = .data[[dv_name]]
+         )
       ) +
          ggplot2::geom_line(linewidth = 1) +
-         ggplot2::geom_ribbon(ggplot2::aes(ymin = lower.CI, ymax = upper.CI),
-                              alpha = 0.2, colour = NA) +
+         ggplot2::geom_ribbon(
+            ggplot2::aes(ymin = lower.CI, ymax = upper.CI),
+            alpha = 0.2, colour = NA
+         ) +
          ggplot2::theme_bw() +
          ggplot2::theme(legend.position = "bottom") +
          ggplot2::labs(
             y = "Predicted Probability",
             x = ifelse(is.null(xlab), focal, xlab)
          )
+      
       
       # Table: -1 SD, Mean, +1 SD
       pred_3 <- data.frame(
