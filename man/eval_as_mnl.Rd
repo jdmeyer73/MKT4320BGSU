@@ -40,7 +40,7 @@ An object of class \code{"eval_as_mnl"}: a list with
 \item \code{fit}: one-row data frame with LL, AIC, BIC, McFadden R2, LR chi2, df, p-value (when available)
 \item \code{coef_table}: coefficient output (data frame or flextable)
 \item \code{coef_table_df}: coefficient table as a plain data frame (always)
-\item \code{classify}: list with \code{model} and (optional) \code{newdata}
+\item \code{classify}: classification results (printable object; see \code{print.eval_as_mnl_classify})
 }
 }
 \description{
