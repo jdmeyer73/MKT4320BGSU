@@ -38,7 +38,7 @@
 #'   \item \code{fit}: one-row data frame with LL, AIC, BIC, McFadden R2, LR chi2, df, p-value (when available)
 #'   \item \code{coef_table}: coefficient output (data frame or flextable)
 #'   \item \code{coef_table_df}: coefficient table as a plain data frame (always)
-#'   \item \code{classify}: classification results (printable object; see \code{print.eval_as_mnl_classify})
+#'   \item \code{classify}: list with \code{model} and (optional) \code{newdata}
 #' }
 #'
 #' @importFrom stats coef vcov pnorm logLik AIC BIC fitted
@@ -74,6 +74,8 @@ eval_as_mnl <- function(model,
       stop("Package 'caret' is required.", call. = FALSE)
    }
    
+   fmt <- function(x, d) format(round(x, d), nsmall = d)
+   
    # ----------------------------
    # (A) Model fit stats
    # ----------------------------
@@ -83,7 +85,7 @@ eval_as_mnl <- function(model,
    aic <- stats::AIC(model)
    bic <- stats::BIC(model)
    
-   mfR2    <- tryCatch(sm$mfR2[1], error = function(e) NA_real_)
+   mfR2 <- tryCatch(sm$mfR2[1], error = function(e) NA_real_)
    lr_stat <- tryCatch(sm$lratio$statistic[1], error = function(e) NA_real_)
    lr_df   <- tryCatch(sm$lratio$parameter[1], error = function(e) NA_real_)
    lr_p    <- tryCatch(sm$lratio$p.value, error = function(e) NA_real_)
@@ -254,8 +256,10 @@ eval_as_mnl <- function(model,
    }
    
    compute_classification_dfidx <- function(dfidx_obj, label) {
+      # probabilities for this data
       probs <- tryCatch(
          if (identical(dfidx_obj, model$model)) {
+            # training: prefer stored probabilities if present
             if (!is.null(model$probabilities)) model$probabilities else stats::fitted(model, type = "probabilities")
          } else {
             predict(model, newdata = dfidx_obj, type = "probabilities")
@@ -309,6 +313,7 @@ eval_as_mnl <- function(model,
       
       if (!isTRUE(ft)) return(out)
       
+      # flextable combined layout (same structure as eval_std_mnl)
       cm_df <- as.data.frame(mat_tot, stringsAsFactors = FALSE)
       cm_df <- cbind(Predicted = rownames(mat_tot), cm_df)
       rownames(cm_df) <- NULL
@@ -355,6 +360,7 @@ eval_as_mnl <- function(model,
       out
    }
    
+   # Training dfidx stored in model$model
    train_dfidx <- model$model
    if (is.null(train_dfidx) || !inherits(train_dfidx, "dfidx")) {
       stop("Training dfidx data not found in model$model.", call. = FALSE)
@@ -370,12 +376,11 @@ eval_as_mnl <- function(model,
       class_new <- compute_classification_dfidx(newdata, label_newdata)
    }
    
-   # IMPORTANT CHANGE:
-   # Give $classify its own class + print method so `as_eval$classify`
-   # renders flextables properly in bookdown when ft=TRUE.
    classify_res <- list(model = class_model, newdata = class_new, ft = isTRUE(ft))
    class(classify_res) <- "eval_as_mnl_classify"
-   
+   # ----------------------------
+   # Return object
+   # ----------------------------
    res <- list(
       mnmodel = model,
       fit = fit,
@@ -390,6 +395,8 @@ eval_as_mnl <- function(model,
 #' @export
 print.eval_as_mnl <- function(x, ...) {
    
+   # If ft=TRUE, LR chi2 + McFadden R2 are already embedded as header lines
+   # in the coefficient flextable, so avoid printing them again to console.
    if (!inherits(x$coef_table, "flextable")) {
       
       p_txt <- if (is.na(x$fit$p_value)) {
@@ -414,12 +421,15 @@ print.eval_as_mnl <- function(x, ...) {
       )
    }
    
+   # ---- Coefficients ----
    if (inherits(x$coef_table, "flextable")) {
       print(x$coef_table, ...)
    } else {
       print(x$coef_table, row.names = FALSE)
    }
    
+   # ---- Classification matrices ----
+   # IMPORTANT:
    # Only print classification results to the console when ft = FALSE.
    if (!inherits(x$coef_table, "flextable") && !is.null(x$classify)) {
       
@@ -447,15 +457,20 @@ print.eval_as_mnl <- function(x, ...) {
    invisible(x)
 }
 
+
+
 #' @export
 print.eval_as_mnl_classify <- function(x, ...) {
    
-   # If ft=TRUE, print the flextables themselves at top-level so knitr/bookdown renders them.
+   # If ft=TRUE, print flextables at the top level so knitr/bookdown can render them.
    if (isTRUE(x$ft)) {
-      if (!is.null(x$model) && inherits(x$model$table, "flextable")) {
-         print(x$model$table, ...)
-      } else if (!is.null(x$model)) {
-         print(x$model$table)
+      
+      if (!is.null(x$model)) {
+         if (inherits(x$model$table, "flextable")) {
+            print(x$model$table, ...)
+         } else {
+            print(x$model$table)
+         }
       }
       
       if (!is.null(x$newdata)) {
@@ -469,7 +484,7 @@ print.eval_as_mnl_classify <- function(x, ...) {
       return(invisible(x))
    }
    
-   # ft=FALSE fallback: print console-like output (but ONLY when user prints $classify)
+   # ft=FALSE: print console-style classification (only when user prints $classify).
    print_one_console <- function(res) {
       cat("\n", "Classification Matrix - ", res$label, "\n", sep = "")
       cat(
