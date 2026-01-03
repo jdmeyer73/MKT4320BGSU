@@ -457,34 +457,28 @@ print.eval_as_mnl <- function(x, ...) {
    invisible(x)
 }
 
-
-
 #' @export
 print.eval_as_mnl_classify <- function(x, ...) {
    
-   # If ft=TRUE, print flextables at the top level so knitr/bookdown can render them.
+   # ft=TRUE: in interactive console, print the flextables (this will show a summary in console)
+   # In knitted output, rendering is handled by knit_print.eval_as_mnl_classify().
    if (isTRUE(x$ft)) {
-      
-      if (!is.null(x$model)) {
-         if (inherits(x$model$table, "flextable")) {
-            print(x$model$table, ...)
-         } else {
-            print(x$model$table)
-         }
+      if (!is.null(x$model) && inherits(x$model$table, "flextable")) {
+         print(x$model$table, ...)
+      } else if (!is.null(x$model)) {
+         print(x$model$table)
       }
       
-      if (!is.null(x$newdata)) {
-         if (inherits(x$newdata$table, "flextable")) {
-            print(x$newdata$table, ...)
-         } else {
-            print(x$newdata$table)
-         }
+      if (!is.null(x$newdata) && inherits(x$newdata$table, "flextable")) {
+         print(x$newdata$table, ...)
+      } else if (!is.null(x$newdata)) {
+         print(x$newdata$table)
       }
       
       return(invisible(x))
    }
    
-   # ft=FALSE: print console-style classification (only when user prints $classify).
+   # ft=FALSE: console-style classification (only when user explicitly prints $classify)
    print_one_console <- function(res) {
       cat("\n", "Classification Matrix - ", res$label, "\n", sep = "")
       cat(
@@ -503,38 +497,27 @@ print.eval_as_mnl_classify <- function(x, ...) {
    if (!is.null(x$newdata)) print_one_console(x$newdata)
    
    invisible(x)
-   #' @export
-   knit_print.eval_as_mnl_classify <- function(x, ...) {
-      
-      # If ft=FALSE, just let normal printing happen
-      if (!isTRUE(x$ft)) {
-         return(knitr::knit_print(print(x), ...))
-      }
-      
-      # Collect top-level rendered outputs for model + newdata flextables
-      outs <- character(0)
-      
-      if (!is.null(x$model) && inherits(x$model$table, "flextable")) {
-         o1 <- knitr::knit_print(x$model$table, ...)
-         outs <- c(outs, as.character(o1))
-      }
-      
-      if (!is.null(x$newdata) && inherits(x$newdata$table, "flextable")) {
-         o2 <- knitr::knit_print(x$newdata$table, ...)
-         outs <- c(outs, as.character(o2))
-      }
-      
-      knitr::asis_output(paste(outs, collapse = "\n\n"))
-   }
-   #' @export
-   print.eval_as_mnl_classify <- function(x, ...) {
-      if (isTRUE(x$ft)) {
-         cat("<eval_as_mnl_classify: flextable output>\n")
-         invisible(x)
-      } else {
-         # your existing console printing here if you want
-         invisible(x)
-      }
+}
+
+#' @export
+knit_print.eval_as_mnl_classify <- function(x, ...) {
+   
+   # If ft=FALSE, let knitr handle the default printing of this object.
+   if (!isTRUE(x$ft)) {
+      return(knitr::knit_print.default(x, ...))
    }
    
+   outs <- character(0)
+   
+   if (!is.null(x$model) && inherits(x$model$table, "flextable")) {
+      k1 <- knitr::knit_print(x$model$table, ...)
+      outs <- c(outs, as.character(k1))
+   }
+   
+   if (!is.null(x$newdata) && inherits(x$newdata$table, "flextable")) {
+      k2 <- knitr::knit_print(x$newdata$table, ...)
+      outs <- c(outs, as.character(k2))
+   }
+   
+   knitr::asis_output(paste(outs, collapse = "\n\n"))
 }
