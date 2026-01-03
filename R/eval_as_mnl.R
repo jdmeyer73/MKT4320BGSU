@@ -503,4 +503,38 @@ print.eval_as_mnl_classify <- function(x, ...) {
    if (!is.null(x$newdata)) print_one_console(x$newdata)
    
    invisible(x)
+   #' @export
+   knit_print.eval_as_mnl_classify <- function(x, ...) {
+      
+      # If ft=FALSE, just let normal printing happen
+      if (!isTRUE(x$ft)) {
+         return(knitr::knit_print(print(x), ...))
+      }
+      
+      # Collect top-level rendered outputs for model + newdata flextables
+      outs <- character(0)
+      
+      if (!is.null(x$model) && inherits(x$model$table, "flextable")) {
+         o1 <- knitr::knit_print(x$model$table, ...)
+         outs <- c(outs, as.character(o1))
+      }
+      
+      if (!is.null(x$newdata) && inherits(x$newdata$table, "flextable")) {
+         o2 <- knitr::knit_print(x$newdata$table, ...)
+         outs <- c(outs, as.character(o2))
+      }
+      
+      knitr::asis_output(paste(outs, collapse = "\n\n"))
+   }
+   #' @export
+   print.eval_as_mnl_classify <- function(x, ...) {
+      if (isTRUE(x$ft)) {
+         cat("<eval_as_mnl_classify: flextable output>\n")
+         invisible(x)
+      } else {
+         # your existing console printing here if you want
+         invisible(x)
+      }
+   }
+   
 }
