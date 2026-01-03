@@ -38,7 +38,7 @@
 #'   \item \code{fit}: one-row data frame with LL, AIC, BIC, McFadden R2, LR chi2, df, p-value (when available)
 #'   \item \code{coef_table}: coefficient output (data frame or flextable)
 #'   \item \code{coef_table_df}: coefficient table as a plain data frame (always)
-#'   \item \code{classify}: list with \code{model} and (optional) \code{newdata}
+#'   \item \code{classify_model}: classification results for model (training) data (matrix/list when ft=FALSE; flextable when ft=TRUE)
 #' }
 #'
 #' @importFrom stats coef vcov pnorm logLik AIC BIC fitted
@@ -376,8 +376,15 @@ eval_as_mnl <- function(model,
       class_new <- compute_classification_dfidx(newdata, label_newdata)
    }
    
-   classify_res <- list(model = class_model, newdata = class_new, ft = isTRUE(ft))
-   class(classify_res) <- "eval_as_mnl_classify"
+   classify_res <- invisible(list(model = class_model, newdata = class_new))
+   
+   # For knitting/bookdown: return flextables directly (not nested inside a list)
+   classify_model_out <- if (isTRUE(ft)) class_model$table else class_model
+   classify_newdata_out <- NULL
+   if (!is.null(class_new)) {
+      classify_newdata_out <- if (isTRUE(ft)) class_new$table else class_new
+   }
+   
    # ----------------------------
    # Return object
    # ----------------------------
@@ -386,7 +393,8 @@ eval_as_mnl <- function(model,
       fit = fit,
       coef_table = coef_out,
       coef_table_df = coef_df,
-      classify = classify_res
+      classify_model = classify_model_out,
+      classify_newdata = classify_newdata_out
    )
    class(res) <- "eval_as_mnl"
    res
@@ -431,7 +439,7 @@ print.eval_as_mnl <- function(x, ...) {
    # ---- Classification matrices ----
    # IMPORTANT:
    # Only print classification results to the console when ft = FALSE.
-   if (!inherits(x$coef_table, "flextable") && !is.null(x$classify)) {
+   if (!inherits(x$coef_table, "flextable") && (!is.null(x$classify_model) || !is.null(x$classify_newdata))) {
       
       print_one_console <- function(res) {
          cat("\n", "Classification Matrix - ", res$label, "\n", sep = "")
@@ -447,8 +455,8 @@ print.eval_as_mnl <- function(x, ...) {
          cat("\n")
       }
       
-      m <- x$classify$model
-      nd <- x$classify$newdata
+      m <- x$classify_model
+      nd <- x$classify_newdata
       
       print_one_console(m)
       if (!is.null(nd)) print_one_console(nd)
@@ -457,67 +465,3 @@ print.eval_as_mnl <- function(x, ...) {
    invisible(x)
 }
 
-#' @export
-print.eval_as_mnl_classify <- function(x, ...) {
-   
-   # ft=TRUE: in interactive console, print the flextables (this will show a summary in console)
-   # In knitted output, rendering is handled by knit_print.eval_as_mnl_classify().
-   if (isTRUE(x$ft)) {
-      if (!is.null(x$model) && inherits(x$model$table, "flextable")) {
-         print(x$model$table, ...)
-      } else if (!is.null(x$model)) {
-         print(x$model$table)
-      }
-      
-      if (!is.null(x$newdata) && inherits(x$newdata$table, "flextable")) {
-         print(x$newdata$table, ...)
-      } else if (!is.null(x$newdata)) {
-         print(x$newdata$table)
-      }
-      
-      return(invisible(x))
-   }
-   
-   # ft=FALSE: console-style classification (only when user explicitly prints $classify)
-   print_one_console <- function(res) {
-      cat("\n", "Classification Matrix - ", res$label, "\n", sep = "")
-      cat(
-         "Accuracy = ", format(res$overall["Accuracy"], nsmall = 3),
-         "\nPCC = ", format(res$overall["PCC"], nsmall = 3),
-         "\n\n",
-         sep = ""
-      )
-      print(res$table)
-      cat("\nStatistics by Class:\n")
-      print(res$by_class)
-      cat("\n")
-   }
-   
-   if (!is.null(x$model)) print_one_console(x$model)
-   if (!is.null(x$newdata)) print_one_console(x$newdata)
-   
-   invisible(x)
-}
-
-#' @export
-knit_print.eval_as_mnl_classify <- function(x, ...) {
-   
-   # If ft=FALSE, let knitr handle the default printing of this object.
-   if (!isTRUE(x$ft)) {
-      return(knitr::knit_print.default(x, ...))
-   }
-   
-   outs <- character(0)
-   
-   if (!is.null(x$model) && inherits(x$model$table, "flextable")) {
-      k1 <- knitr::knit_print(x$model$table, ...)
-      outs <- c(outs, as.character(k1))
-   }
-   
-   if (!is.null(x$newdata) && inherits(x$newdata$table, "flextable")) {
-      k2 <- knitr::knit_print(x$newdata$table, ...)
-      outs <- c(outs, as.character(k2))
-   }
-   
-   knitr::asis_output(paste(outs, collapse = "\n\n"))
-}
