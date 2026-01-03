@@ -56,7 +56,6 @@
 #' @importFrom flextable flextable autofit
 #'
 #' @export
-
 pp_as_mnl <- function(model,
                       focal_var,
                       focal_type = c("auto", "alt", "case"),
@@ -87,6 +86,7 @@ pp_as_mnl <- function(model,
    
    focal_type <- match.arg(focal_type)
    me_method  <- match.arg(me_method)
+   
    # training data only
    df_use <- model$model
    if (is.null(df_use) || !inherits(df_use, "dfidx")) stop("Training dfidx data not found in model$model.", call. = FALSE)
@@ -312,7 +312,8 @@ pp_as_mnl <- function(model,
             }
             at_plot_alt <- seq(from = x_min, to = x_max, length.out = grid_n)
             
-            at_table_alt <- mu_alt + c(-2, -1, 0, 1, 2)
+            # ---- CHANGED: mean and +/- 1 only (continuous) ----
+            at_table_alt <- mu_alt + c(-1, 0, 1)
             at_table_alt <- pmin(pmax(at_table_alt, rng_alt[1]), rng_alt[2])
             at_table_alt <- sort(unique(as.numeric(at_table_alt)))
             
@@ -363,7 +364,8 @@ pp_as_mnl <- function(model,
          }
          at_plot_cs <- seq(from = x_min, to = x_max, length.out = grid_n)
          
-         at_table_cs <- mu_cs + c(-2, -1, 0, 1, 2)
+         # ---- CHANGED: mean and +/- 1 only (continuous) ----
+         at_table_cs <- mu_cs + c(-1, 0, 1)
          at_table_cs <- pmin(pmax(at_table_cs, rng_cs[1]), rng_cs[2])
          at_table_cs <- sort(unique(as.numeric(at_table_cs)))
          
@@ -455,6 +457,14 @@ pp_as_mnl <- function(model,
          values_from = mean_prob
       )
       
+      # ---- drop duplicate focal_value rows caused by floating point tolerance ----
+      pp_table_df$focal_value_round <- round(as.numeric(pp_table_df$focal_value), digits)
+      
+      pp_table_df <- pp_table_df[!duplicated(paste(pp_table_df$varied_alt, pp_table_df$focal_value_round)), , drop = FALSE]
+      
+      pp_table_df$focal_value <- pp_table_df$focal_value_round
+      pp_table_df$focal_value_round <- NULL
+      
       pp_table_df <- dplyr::arrange(pp_table_df, varied_alt, as.numeric(focal_value))
       
       prob_cols <- setdiff(names(pp_table_df), c("varied_alt", "focal_value"))
@@ -473,6 +483,13 @@ pp_as_mnl <- function(model,
          names_from = choice_alt,
          values_from = mean_prob
       )
+      
+      # ---- drop duplicate focal_value rows caused by floating point tolerance ----
+      pp_table_df$focal_value_round <- round(as.numeric(pp_table_df$focal_value), digits)
+      pp_table_df <- pp_table_df[!duplicated(pp_table_df$focal_value_round), , drop = FALSE]
+      pp_table_df$focal_value <- pp_table_df$focal_value_round
+      pp_table_df$focal_value_round <- NULL
+      
       
       pp_table_df <- dplyr::arrange(pp_table_df, as.numeric(focal_value))
       
@@ -507,7 +524,7 @@ pp_as_mnl <- function(model,
             if (isTRUE(is_binary_global)) {
                " is binary, only the two observed values are shown."
             } else {
-               " is continuous, the values shown include the mean, +/- 1 unit, and +/- 2 units."
+               " is continuous, the values shown include the mean and +/- 1 unit."
             }
          )
       )

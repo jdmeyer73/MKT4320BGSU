@@ -408,30 +408,39 @@ print.eval_as_mnl <- function(x, ...) {
       }
       
       cat(
-         "LR chi2 (", x$fit$df, ") = ", format(x$fit$LR_Chi2, nsmall = 4),
+         "LR chi2 (", x$fit$df, ") = ",
+         format(x$fit$LR_Chi2, nsmall = 4),
          "; p ", p_txt, "\n",
          sep = ""
       )
-      cat("McFadden's Pseudo R-square = ",
-          format(x$fit$McFadden_R2, nsmall = 4),
-          "\n\n", sep = "")
+      cat(
+         "McFadden's Pseudo R-square = ",
+         format(x$fit$McFadden_R2, nsmall = 4),
+         "\n\n",
+         sep = ""
+      )
    }
    
-   # ---- Then coefficients ----
+   # ---- Coefficients ----
    if (inherits(x$coef_table, "flextable")) {
       print(x$coef_table, ...)
    } else {
       print(x$coef_table, row.names = FALSE)
    }
    
-   # ---- Then classification matrices ----
-   if (!is.null(x$classify)) {
+   # ---- Classification matrices ----
+   # IMPORTANT:
+   # Only print classification results to the console when ft = FALSE.
+   if (!inherits(x$coef_table, "flextable") && !is.null(x$classify)) {
       
       print_one_console <- function(res) {
          cat("\n", "Classification Matrix - ", res$label, "\n", sep = "")
-         cat("Accuracy = ", format(res$overall["Accuracy"], nsmall = 3),
-             "\nPCC = ", format(res$overall["PCC"], nsmall = 3),
-             "\n\n", sep = "")
+         cat(
+            "Accuracy = ", format(res$overall["Accuracy"], nsmall = 3),
+            "\nPCC = ", format(res$overall["PCC"], nsmall = 3),
+            "\n\n",
+            sep = ""
+         )
          print(res$table)
          cat("\nStatistics by Class:\n")
          print(res$by_class)
@@ -441,14 +450,10 @@ print.eval_as_mnl <- function(x, ...) {
       m <- x$classify$model
       nd <- x$classify$newdata
       
-      if (inherits(m$table, "flextable")) {
-         print(m$table, ...)
-         if (!is.null(nd)) print(nd$table, ...)
-      } else {
-         print_one_console(m)
-         if (!is.null(nd)) print_one_console(nd)
-      }
+      print_one_console(m)
+      if (!is.null(nd)) print_one_console(nd)
    }
    
    invisible(x)
 }
+
