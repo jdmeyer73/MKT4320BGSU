@@ -7,73 +7,70 @@
 easy_cluster_describe(
   data,
   cluster_col = "cluster",
-  vars = NULL,
+  var,
   alpha = 0.05,
   drop_missing = TRUE,
-  auto_print = TRUE
+  auto_print = TRUE,
+  digits = 4
 )
 }
 \arguments{
-\item{data}{A data frame containing the cluster membership column and variables
-to describe.}
+\item{data}{A data frame containing the cluster membership column and the variable to describe.}
 
-\item{cluster_col}{Character string naming the cluster membership column in
-\code{data}.}
+\item{cluster_col}{Character string naming the cluster membership column in \code{data}.}
 
-\item{vars}{Optional character vector of variables to describe. If \code{NULL}
-(default), all columns except \code{cluster_col} are used.}
+\item{var}{Character string naming the single variable to describe.}
 
 \item{alpha}{Significance level for hypothesis tests (default = 0.05).}
 
-\item{drop_missing}{Logical; if \code{TRUE} (default), rows with missing cluster
-membership are dropped prior to analysis.}
+\item{drop_missing}{Logical; if \code{TRUE} (default), rows with missing cluster membership are dropped.}
 
-\item{auto_print}{Logical; if \code{TRUE} (default), prints summaries to the console.}
+\item{auto_print}{Logical; if \code{TRUE} (default), prints output and returns \code{NULL} invisibly.
+If \code{FALSE}, returns a results list invisibly (and prints nothing).}
+
+\item{digits}{Integer; number of digits used for rounding/formatting numeric output (default = 4).}
 }
 \value{
-Invisibly returns a list with:
-\itemize{
-\item \code{alpha}: The significance level used.
-\item \code{continuous_tests}: Data frame of overall tests for continuous variables.
-\item \code{continuous_summaries}: Named list of summaries for significant continuous variables.
-\item \code{categorical_tests}: Data frame of overall tests for categorical variables.
-\item \code{categorical_summaries}: Named list of summaries for significant categorical variables.
+If \code{auto_print = TRUE} (default), returns \code{invisible(NULL)} after printing.
+If \code{auto_print = FALSE}, returns \code{invisible(res)} where \code{res} is a list with:
+\describe{
+\item{alpha}{The alpha level used.}
+\item{variable}{The variable analyzed.}
+\item{type}{\code{"continuous"} or \code{"categorical"}.}
+\item{overall_test}{A one-row data frame with test name, p-value, and significance.}
+\item{details}{For significant tests, additional tables (cluster summaries, post-hoc results, etc.).}
 }
 }
 \description{
-Describe clusters using non-clustering variables (continuous and categorical).
-The function automatically detects variable type, runs overall tests across
-clusters, and reports detailed summaries for statistically significant variables.
+Describe cluster differences for a single variable (continuous or categorical).
+Designed for teaching in R Markdown / R Notebooks: tables are rendered as plain
+text with headings to reduce RStudio "thumbnail" outputs during interactive runs.
 }
 \details{
-For continuous variables, the function reports ANOVA p-values for all variables.
-For variables significant at the specified \code{alpha}, cluster means, standard
-deviations, and Games--Howell post-hoc comparisons are provided.
+This function tests whether clusters differ on one variable:
+\itemize{
+\item \strong{Continuous variable:} one-way ANOVA. If significant, prints cluster
+means (N, Mean, SD) and Games--Howell post-hoc comparisons.
+\item \strong{Categorical variable:} chi-square test (or Fisher's exact test if needed).
+If significant, prints a column-percentage crosstab (clusters are columns) and
+Holm-adjusted Fisher multiple comparisons.
+}
 
-For categorical variables, the function reports overall chi-square (or Fisher)
-test p-values. For significant variables, a cluster-by-category cross-tabulation
-(column percentages) and Holm-adjusted Fisher multiple-comparison p-values are
-shown.
+Use \code{auto_print = FALSE} to suppress printing and instead return a results list
+invisibly (useful for instructor testing or downstream processing).
 }
 \examples{
 \dontrun{
-# Basic usage: describe all non-cluster variables
-easy_cluster_describe(data = segdata, cluster_col = "cluster")
+# Continuous variable
+easy_cluster_describe(hc_final$data, cluster_col = "hc4", var = "online")
 
-# Describe a subset of variables
-easy_cluster_describe(
-  data = segdata,
-  cluster_col = "cluster",
-  vars = c("age", "income", "gender")
-)
+# Categorical variable
+easy_cluster_describe(hc_final$data, cluster_col = "hc4", var = "edu")
 
-# Use a different significance level and suppress printing
-out <- easy_cluster_describe(
-  data = segdata,
-  cluster_col = "cluster",
-  alpha = 0.10,
-  auto_print = FALSE
-)
+# Instructor/testing mode: return results (no printing)
+res <- easy_cluster_describe(hc_final$data, cluster_col = "hc4", var = "edu", auto_print = FALSE)
+names(res)
+res$overall_test
 }
 
 }

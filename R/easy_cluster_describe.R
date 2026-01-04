@@ -1,384 +1,396 @@
-#' @title Easy Cluster Description
-#' @description
-#' Describe clusters using non-clustering variables (continuous and categorical).
-#' The function automatically detects variable type, runs overall tests across
-#' clusters, and reports detailed summaries for statistically significant variables.
+#' Easy Cluster Description
+#'
+#' Describe cluster differences for a single variable (continuous or categorical).
+#' Designed for teaching in R Markdown / R Notebooks: tables are rendered as plain
+#' text with headings to reduce RStudio "thumbnail" outputs during interactive runs.
 #'
 #' @details
-#' For continuous variables, the function reports ANOVA p-values for all variables.
-#' For variables significant at the specified \code{alpha}, cluster means, standard
-#' deviations, and Games--Howell post-hoc comparisons are provided.
+#' This function tests whether clusters differ on one variable:
+#' \itemize{
+#'   \item \strong{Continuous variable:} one-way ANOVA. If significant, prints cluster
+#'   means (N, Mean, SD) and Games--Howell post-hoc comparisons.
+#'   \item \strong{Categorical variable:} chi-square test (or Fisher's exact test if needed).
+#'   If significant, prints a column-percentage crosstab (clusters are columns) and
+#'   Holm-adjusted Fisher multiple comparisons.
+#' }
 #'
-#' For categorical variables, the function reports overall chi-square (or Fisher)
-#' test p-values. For significant variables, a cluster-by-category cross-tabulation
-#' (column percentages) and Holm-adjusted Fisher multiple-comparison p-values are
-#' shown.
+#' Use \code{auto_print = FALSE} to suppress printing and instead return a results list
+#' invisibly (useful for instructor testing or downstream processing).
 #'
-#' @param data A data frame containing the cluster membership column and variables
-#'   to describe.
-#' @param cluster_col Character string naming the cluster membership column in
-#'   \code{data}.
-#' @param vars Optional character vector of variables to describe. If \code{NULL}
-#'   (default), all columns except \code{cluster_col} are used.
+#' @param data A data frame containing the cluster membership column and the variable to describe.
+#' @param cluster_col Character string naming the cluster membership column in \code{data}.
+#' @param var Character string naming the single variable to describe.
 #' @param alpha Significance level for hypothesis tests (default = 0.05).
-#' @param drop_missing Logical; if \code{TRUE} (default), rows with missing cluster
-#'   membership are dropped prior to analysis.
-#' @param auto_print Logical; if \code{TRUE} (default), prints summaries to the console.
+#' @param drop_missing Logical; if \code{TRUE} (default), rows with missing cluster membership are dropped.
+#' @param auto_print Logical; if \code{TRUE} (default), prints output and returns \code{NULL} invisibly.
+#'   If \code{FALSE}, returns a results list invisibly (and prints nothing).
+#' @param digits Integer; number of digits used for rounding/formatting numeric output (default = 4).
 #'
 #' @return
-#' Invisibly returns a list with:
-#' \itemize{
-#'   \item \code{alpha}: The significance level used.
-#'   \item \code{continuous_tests}: Data frame of overall tests for continuous variables.
-#'   \item \code{continuous_summaries}: Named list of summaries for significant continuous variables.
-#'   \item \code{categorical_tests}: Data frame of overall tests for categorical variables.
-#'   \item \code{categorical_summaries}: Named list of summaries for significant categorical variables.
+#' If \code{auto_print = TRUE} (default), returns \code{invisible(NULL)} after printing.
+#' If \code{auto_print = FALSE}, returns \code{invisible(res)} where \code{res} is a list with:
+#' \describe{
+#'   \item{alpha}{The alpha level used.}
+#'   \item{variable}{The variable analyzed.}
+#'   \item{type}{\code{"continuous"} or \code{"categorical"}.}
+#'   \item{overall_test}{A one-row data frame with test name, p-value, and significance.}
+#'   \item{details}{For significant tests, additional tables (cluster summaries, post-hoc results, etc.).}
 #' }
 #'
 #' @examples
 #' \dontrun{
-#' # Basic usage: describe all non-cluster variables
-#' easy_cluster_describe(data = segdata, cluster_col = "cluster")
+#' # Continuous variable
+#' easy_cluster_describe(hc_final$data, cluster_col = "hc4", var = "online")
 #'
-#' # Describe a subset of variables
-#' easy_cluster_describe(
-#'   data = segdata,
-#'   cluster_col = "cluster",
-#'   vars = c("age", "income", "gender")
-#' )
+#' # Categorical variable
+#' easy_cluster_describe(hc_final$data, cluster_col = "hc4", var = "edu")
 #'
-#' # Use a different significance level and suppress printing
-#' out <- easy_cluster_describe(
-#'   data = segdata,
-#'   cluster_col = "cluster",
-#'   alpha = 0.10,
-#'   auto_print = FALSE
-#' )
+#' # Instructor/testing mode: return results (no printing)
+#' res <- easy_cluster_describe(hc_final$data, cluster_col = "hc4", var = "edu", auto_print = FALSE)
+#' names(res)
+#' res$overall_test
 #' }
 #'
-#' @importFrom stats aov chisq.test fisher.test as.formula
+#' @importFrom stats aov chisq.test fisher.test as.formula sd
+#' @importFrom utils capture.output str
 #' @export
 
 easy_cluster_describe <- function(data,
                                   cluster_col = "cluster",
-                                  vars = NULL,
+                                  var,
                                   alpha = 0.05,
                                   drop_missing = TRUE,
-                                  auto_print = TRUE) {
+                                  auto_print = TRUE,
+                                  digits = 4) {
    
-   # ---- validate inputs ----
-   if (!is.data.frame(data)) stop("`data` must be a data frame.", call. = FALSE)
+   # -------------------- helpers --------------------
+   .heading <- function(txt) cat("\n", txt, "\n", sep = "")
+   
+   # Render a data.frame/matrix to plain text WITHOUT calling print()
+   .table_to_text <- function(x, row.names = TRUE) {
+      if (is.matrix(x)) x <- as.data.frame(x, stringsAsFactors = FALSE)
+      
+      x <- as.data.frame(x, stringsAsFactors = FALSE, optional = TRUE)
+      
+      # Add rownames as a real column if requested
+      if (isTRUE(row.names)) {
+         rn <- rownames(x)
+         if (is.null(rn)) rn <- rep("", nrow(x))
+         x <- cbind(Row = rn, x, stringsAsFactors = FALSE)
+      }
+      
+      # Convert all columns to character (no printing)
+      for (j in seq_along(x)) {
+         v <- x[[j]]
+         if (is.numeric(v)) {
+            x[[j]] <- formatC(v, digits = digits, format = "fg", flag = "#")
+         } else {
+            if (inherits(v, "factor")) v <- as.character(v)
+            v[is.na(v)] <- ""
+            x[[j]] <- as.character(v)
+         }
+      }
+      
+      # Compute widths
+      widths <- integer(ncol(x))
+      for (j in seq_len(ncol(x))) {
+         widths[j] <- max(nchar(names(x)[j]), nchar(x[[j]]), na.rm = TRUE)
+         if (!is.finite(widths[j]) || widths[j] < 1) widths[j] <- 1L
+      }
+      
+      pad <- function(s, w) {
+         s <- ifelse(is.na(s), "", s)
+         paste0(s, strrep(" ", pmax(0, w - nchar(s))))
+      }
+      
+      header <- paste(mapply(pad, names(x), widths), collapse = "  ")
+      sep    <- paste(mapply(function(w) strrep("-", w), widths), collapse = "  ")
+      
+      rows <- character(nrow(x))
+      if (nrow(x) > 0) {
+         for (i in seq_len(nrow(x))) {
+            rows[i] <- paste(mapply(pad, as.character(x[i, , drop = TRUE]), widths), collapse = "  ")
+         }
+      }
+      
+      paste(c(header, sep, rows), collapse = "\n")
+   }
+   
+   .cat_table <- function(x, row.names = TRUE) {
+      txt <- local(.table_to_text(x, row.names = row.names))
+      cat(txt, "\n", sep = "")
+      invisible(NULL)
+   }
+   
+   .block <- function(title, x, row.names = TRUE) {
+      .heading(title)
+      if (is.data.frame(x) || is.matrix(x)) {
+         .cat_table(x, row.names = row.names)
+      } else {
+         # Safe for non-table objects
+         cat(paste(capture.output(str(x)), collapse = "\n"), "\n", sep = "")
+      }
+      invisible(NULL)
+   }
+   
+   # -------------------- validate inputs --------------------
+   if (!is.data.frame(data)) stop("`data` must be a data.frame.", call. = FALSE)
    
    if (!is.character(cluster_col) || length(cluster_col) != 1) {
       stop("`cluster_col` must be a single character string.", call. = FALSE)
    }
-   if (!cluster_col %in% names(data)) {
-      stop("`cluster_col` not found in `data`.", call. = FALSE)
+   if (!cluster_col %in% names(data)) stop("`cluster_col` not found in `data`.", call. = FALSE)
+   
+   if (missing(var) || is.null(var)) {
+      stop("This function requires `var` (exactly ONE variable name).", call. = FALSE)
    }
+   if (!is.character(var) || length(var) != 1) {
+      stop("`var` must be a single character string (one variable at a time).", call. = FALSE)
+   }
+   
+   v <- var
+   if (!v %in% names(data)) stop("`var` not found in `data`: ", v, call. = FALSE)
+   if (identical(v, cluster_col)) stop("`var` cannot be the same as `cluster_col`.", call. = FALSE)
    
    if (!is.numeric(alpha) || length(alpha) != 1 || is.na(alpha) || alpha <= 0 || alpha >= 1) {
       stop("`alpha` must be a single number between 0 and 1 (exclusive).", call. = FALSE)
    }
-   
-   if (!is.logical(drop_missing) || length(drop_missing) != 1) {
-      stop("`drop_missing` must be TRUE/FALSE.", call. = FALSE)
+   if (!is.logical(drop_missing) || length(drop_missing) != 1) stop("`drop_missing` must be TRUE/FALSE.", call. = FALSE)
+   if (!is.logical(auto_print) || length(auto_print) != 1) stop("`auto_print` must be TRUE/FALSE.", call. = FALSE)
+   if (!is.numeric(digits) || length(digits) != 1 || is.na(digits) || digits < 0) {
+      stop("`digits` must be a non-negative integer.", call. = FALSE)
    }
-   if (!is.logical(auto_print) || length(auto_print) != 1) {
-      stop("`auto_print` must be TRUE/FALSE.", call. = FALSE)
-   }
+   digits <- as.integer(digits)
    
-   # choose vars
-   if (is.null(vars)) {
-      vars <- setdiff(names(data), cluster_col)
-   } else {
-      if (!is.character(vars) || length(vars) < 1) {
-         stop("`vars` must be NULL or a non-empty character vector.", call. = FALSE)
-      }
-      bad <- vars[!vars %in% names(data)]
-      if (length(bad) > 0) {
-         stop("These `vars` are not in `data`: ", paste(bad, collapse = ", "), call. = FALSE)
-      }
-      vars <- setdiff(vars, cluster_col)
-   }
-   
-   # drop missing clusters (optional)
+   # -------------------- prep data --------------------
    cl <- data[[cluster_col]]
    if (drop_missing) {
-      keep_cl <- !is.na(cl)
-      data <- data[keep_cl, , drop = FALSE]
+      keep <- !is.na(cl)
+      data <- data[keep, , drop = FALSE]
       cl <- data[[cluster_col]]
    }
    
-   # cluster as factor
    cl <- as.factor(cl)
    data[[cluster_col]] <- cl
    k_levels <- levels(cl)
    
-   # split vars into continuous vs categorical (auto-detect)
-   is_cont <- vapply(data[, vars, drop = FALSE], function(x) is.numeric(x), logical(1))
-   cont_vars <- vars[is_cont]
-   cat_vars  <- vars[!is_cont]
+   dfv <- data[, c(cluster_col, v), drop = FALSE]
+   dfv <- dfv[!is.na(dfv[[v]]), , drop = FALSE]
    
-   # coerce character/logical to factor for categorical
-   for (v in cat_vars) {
-      if (is.character(data[[v]]) || is.logical(data[[v]])) {
-         data[[v]] <- as.factor(data[[v]])
+   if (nrow(dfv) == 0) {
+      if (isTRUE(auto_print)) {
+         .heading(paste0("Variable: ", v))
+         cat("No non-missing data available for this variable.\n")
+         return(invisible(NULL))
+      } else {
+         res <- list(
+            alpha = alpha,
+            variable = v,
+            type = NA_character_,
+            overall_test = data.frame(
+               Variable = v, Test = NA_character_, p_value = NA_real_, Significant = FALSE,
+               stringsAsFactors = FALSE
+            ),
+            details = NULL
+         )
+         return(invisible(res))
       }
    }
    
-   # ------------------------------------------------------------------
-   # Continuous: overall p-values for ALL; summaries only for significant;
-   # Games-Howell post-hoc + plain-language direction string
-   # ------------------------------------------------------------------
-   continuous_tests <- data.frame()
-   continuous_summaries <- list()
+   is_cont <- is.numeric(dfv[[v]])
+   if (!is_cont) {
+      if (is.character(dfv[[v]]) || is.logical(dfv[[v]])) dfv[[v]] <- as.factor(dfv[[v]])
+      dfv[[v]] <- as.factor(dfv[[v]])
+   }
    
-   have_rstatix <- requireNamespace("rstatix", quietly = TRUE)
+   # -------------------- analysis --------------------
+   overall_test <- NULL
+   details <- NULL
    
-   if (length(cont_vars) > 0) {
-      for (v in cont_vars) {
-         
-         dfv <- data[, c(cluster_col, v), drop = FALSE]
-         dfv <- dfv[!is.na(dfv[[v]]), , drop = FALSE]
-         if (nrow(dfv) == 0) next
-         
-         p_val <- NA_real_
-         if (length(unique(dfv[[cluster_col]])) > 1) {
-            fit <- stats::aov(dfv[[v]] ~ dfv[[cluster_col]])
-            an  <- summary(fit)[[1]]
-            p_val <- as.numeric(an[["Pr(>F)"]][1])
+   if (is_cont) {
+      # -------- continuous --------
+      p_val <- NA_real_
+      if (length(unique(dfv[[cluster_col]])) > 1) {
+         fit <- stats::aov(dfv[[v]] ~ dfv[[cluster_col]])
+         an  <- summary(fit)[[1]]
+         p_val <- as.numeric(an[["Pr(>F)"]][1])
+      }
+      
+      sig <- (!is.na(p_val)) && (p_val < alpha)
+      
+      overall_test <- data.frame(
+         Variable = v,
+         Test = "ANOVA",
+         p_value = round(p_val, digits),
+         Significant = sig,
+         stringsAsFactors = FALSE
+      )
+      
+      if (sig) {
+         if (!requireNamespace("rstatix", quietly = TRUE)) {
+            stop("Post-hoc requires `rstatix`. Install: install.packages('rstatix')", call. = FALSE)
          }
          
-         continuous_tests <- rbind(
-            continuous_tests,
-            data.frame(
-               Variable = v,
-               Test = "ANOVA",
-               p_value = p_val,
-               Significant = if (!is.na(p_val)) (p_val < alpha) else FALSE,
+         summ <- local({
+            out <- data.frame(
+               Cluster = k_levels,
+               N = 0L,
+               Mean = NA_real_,
+               SD = NA_real_,
                stringsAsFactors = FALSE
             )
-         )
+            for (lev in k_levels) {
+               x <- dfv[dfv[[cluster_col]] == lev, v]
+               x <- x[!is.na(x)]
+               n <- length(x)
+               out[out$Cluster == lev, "N"] <- n
+               out[out$Cluster == lev, "Mean"] <- if (n > 0) mean(x) else NA_real_
+               out[out$Cluster == lev, "SD"] <- if (n > 1) stats::sd(x) else NA_real_
+            }
+            out$Mean <- round(out$Mean, digits)
+            out$SD   <- round(out$SD, digits)
+            out
+         })
          
-         if (is.na(p_val) || !(p_val < alpha)) next
-         
-         if (!have_rstatix) {
-            stop(
-               "Games-Howell post-hoc requires the `rstatix` package. ",
-               "Install it with install.packages('rstatix').",
-               call. = FALSE
+         gh_df <- local({
+            gh <- rstatix::games_howell_test(
+               data = dfv,
+               formula = stats::as.formula(paste0(v, " ~ ", cluster_col))
             )
-         }
+            as.data.frame(gh)
+         })
          
-         # per-cluster summary
-         summ <- data.frame(
-            Cluster = k_levels,
-            N = 0L,
-            Mean = NA_real_,
-            SD = NA_real_,
-            stringsAsFactors = FALSE
-         )
-         
-         for (lev in k_levels) {
-            x <- dfv[dfv[[cluster_col]] == lev, v]
-            x <- x[!is.na(x)]
-            n <- length(x)
-            summ[summ$Cluster == lev, "N"] <- n
-            summ[summ$Cluster == lev, "Mean"] <- if (n > 0) mean(x) else NA_real_
-            summ[summ$Cluster == lev, "SD"] <- if (n > 1) stats::sd(x) else NA_real_
-         }
-         
-         summ$Mean <- round(summ$Mean, 4)
-         summ$SD   <- round(summ$SD, 4)
-         
-         gh <- rstatix::games_howell_test(
-            data = dfv,
-            formula = stats::as.formula(paste0(v, " ~ ", cluster_col))
-         )
-         
-         gh_sig <- gh[!is.na(gh$p.adj) & gh$p.adj < alpha, , drop = FALSE]
+         gh_sig <- gh_df[!is.na(gh_df$p.adj) & gh_df$p.adj < alpha, , drop = FALSE]
          
          diff_str <- "Significant differences: none"
          if (nrow(gh_sig) > 0) {
             mean_map <- setNames(summ$Mean, summ$Cluster)
-            
             pairs <- character(0)
+            
             for (i in seq_len(nrow(gh_sig))) {
                g1 <- as.character(gh_sig$group1[i])
                g2 <- as.character(gh_sig$group2[i])
-               
-               m1 <- mean_map[g1]
-               m2 <- mean_map[g2]
+               m1 <- mean_map[g1]; m2 <- mean_map[g2]
                if (is.na(m1) || is.na(m2)) next
-               
-               if (m1 > m2) {
-                  pairs <- c(pairs, paste0(g1, " > ", g2))
-               } else if (m2 > m1) {
-                  pairs <- c(pairs, paste0(g2, " > ", g1))
-               } else {
-                  pairs <- c(pairs, paste0(g1, " = ", g2))
-               }
+               if (m1 > m2) pairs <- c(pairs, paste0(g1, " > ", g2))
+               else if (m2 > m1) pairs <- c(pairs, paste0(g2, " > ", g1))
             }
             
             pairs <- unique(pairs)
-            if (length(pairs) > 0) {
-               diff_str <- paste0("Significant differences: ", paste(pairs, collapse = ", "))
-            }
+            if (length(pairs) > 0) diff_str <- paste0("Significant differences: ", paste(pairs, collapse = ", "))
          }
          
-         continuous_summaries[[v]] <- list(
+         details <- list(
             summary = summ,
             differences = diff_str,
-            posthoc = gh
+            posthoc = gh_df
          )
       }
       
-      continuous_tests$p_value <- round(continuous_tests$p_value, 4)
-   }
-   
-   # ------------------------------------------------------------------
-   # Categorical: overall tests for ALL; for significant:
-   # cross-tab (clusters as columns) with column % only + fisher.multcomp (Holm)
-   # but keep ONLY the fisher.multcomp p-value table
-   # ------------------------------------------------------------------
-   categorical_tests <- data.frame()
-   categorical_summaries <- list()
-   
-   have_rva <- requireNamespace("RVAideMemoire", quietly = TRUE)
-   
-   if (length(cat_vars) > 0) {
-      for (v in cat_vars) {
+      res <- list(
+         alpha = alpha,
+         variable = v,
+         type = "continuous",
+         overall_test = overall_test,
+         details = details
+      )
+      
+      if (isTRUE(auto_print)) {
+         .heading(paste0("Variable: ", v, " (continuous)"))
+         .block("Overall test", overall_test, row.names = FALSE)
          
-         dfv <- data[, c(cluster_col, v), drop = FALSE]
-         dfv <- dfv[!is.na(dfv[[v]]), , drop = FALSE]
-         if (nrow(dfv) == 0) next
-         
-         dfv[[v]] <- as.factor(dfv[[v]])
-         
-         # Cross-tab: variable rows, cluster columns
-         tab <- table(dfv[[v]], dfv[[cluster_col]])
-         
-         # Overall test: try chi-square; fall back to Fisher
-         test_name <- "Chi-square"
-         p <- NA_real_
-         
-         chi <- try(stats::chisq.test(tab, correct = FALSE), silent = TRUE)
-         if (!inherits(chi, "try-error")) {
-            p <- as.numeric(chi$p.value)
+         if (isTRUE(overall_test$Significant[1]) && !is.null(details)) {
+            .block("Cluster means (N, Mean, SD)", details$summary, row.names = FALSE)
+            cat("\n", details$differences, "\n", sep = "")
+            .block("Post-hoc comparisons (Games-Howell)", details$posthoc, row.names = FALSE)
          } else {
-            test_name <- "Fisher"
-            p <- as.numeric(stats::fisher.test(tab)$p.value)
+            cat("\nNot significant at alpha = ", alpha, "; no post-hoc shown.\n", sep = "")
          }
          
-         categorical_tests <- rbind(
-            categorical_tests,
-            data.frame(
-               Variable = v,
-               Test = test_name,
-               p_value = p,
-               Significant = if (!is.na(p)) (p < alpha) else FALSE,
-               stringsAsFactors = FALSE
-            )
-         )
+         return(invisible(NULL))
+      }
+      
+      return(invisible(res))
+      
+   } else {
+      # -------- categorical --------
+      tab <- table(dfv[[v]], dfv[[cluster_col]])
+      
+      test_name <- "Chi-square"
+      chi <- try(stats::chisq.test(tab, correct = FALSE), silent = TRUE)
+      if (!inherits(chi, "try-error")) {
+         p <- as.numeric(chi$p.value)
+      } else {
+         test_name <- "Fisher"
+         p <- as.numeric(stats::fisher.test(tab)$p.value)
+      }
+      
+      sig <- (!is.na(p)) && (p < alpha)
+      
+      overall_test <- data.frame(
+         Variable = v,
+         Test = test_name,
+         p_value = round(p, digits),
+         Significant = sig,
+         stringsAsFactors = FALSE
+      )
+      
+      if (sig) {
+         # Column percentages (clusters are columns)
+         col_pct <- local({
+            m <- prop.table(tab, 2) * 100
+            round(m, digits)
+         })
          
-         if (is.na(p) || !(p < alpha)) next
+         # Convert to a true wide crosstab-style data.frame (rows = levels, cols = clusters)
+         col_pct_df <- local({
+            df <- as.data.frame.matrix(col_pct)
+            df <- cbind(Level = rownames(df), df, stringsAsFactors = FALSE)
+            rownames(df) <- NULL
+            df
+         })
          
-         # Column percentages only (clusters are columns)
-         col_pct <- prop.table(tab, 2) * 100
-         col_pct <- round(col_pct, 4)
-         
-         # fisher.multcomp (Holm) + extract ONLY the p-value table
-         if (!have_rva) {
-            stop(
-               "Post-hoc for categorical variables requires `RVAideMemoire`. ",
-               "Install it with install.packages('RVAideMemoire').",
-               call. = FALSE
-            )
+         if (!requireNamespace("RVAideMemoire", quietly = TRUE)) {
+            stop("Post-hoc requires `RVAideMemoire`. Install: install.packages('RVAideMemoire')", call. = FALSE)
          }
          
-         fm <- try(RVAideMemoire::fisher.multcomp(tab, p.method = "holm"), silent = TRUE)
-         if (inherits(fm, "try-error")) {
-            # fallback: some versions may use a different argument name
-            fm <- RVAideMemoire::fisher.multcomp(tab, method = "holm")
-         }
+         fm_tab <- local({
+            fm <- RVAideMemoire::fisher.multcomp(tab, p.method = "holm")
+            out <- NULL
+            if (is.matrix(fm)) out <- fm
+            if (is.null(out) && is.list(fm) && !is.null(fm$p.value) && is.matrix(fm$p.value)) out <- fm$p.value
+            if (is.null(out)) stop("Could not extract p-value table from fisher.multcomp().", call. = FALSE)
+            round(out, digits)
+         })
          
-         fm_tab <- NULL
-         if (is.matrix(fm)) {
-            fm_tab <- fm
-         } else if (is.list(fm)) {
-            if (!is.null(fm$p.value) && is.matrix(fm$p.value)) {
-               fm_tab <- fm$p.value
-            } else if (!is.null(fm$pv) && is.matrix(fm$pv)) {
-               fm_tab <- fm$pv
-            } else if (!is.null(fm$table) && is.matrix(fm$table)) {
-               fm_tab <- fm$table
-            } else if (!is.null(fm$result) && is.matrix(fm$result)) {
-               fm_tab <- fm$result
-            }
-         }
-         
-         if (is.null(fm_tab)) {
-            stop("Could not extract a p-value table from RVAideMemoire::fisher.multcomp().", call. = FALSE)
-         }
-         
-         fm_tab <- round(fm_tab, 4)
-         
-         categorical_summaries[[v]] <- list(
-            crosstab_colpct = col_pct,
+         details <- list(
+            crosstab_colpct = col_pct_df,
             posthoc_table = fm_tab
          )
       }
       
-      categorical_tests$p_value <- round(categorical_tests$p_value, 4)
-   }
-   
-   res <- list(
-      alpha = alpha,
-      continuous_tests = continuous_tests,
-      continuous_summaries = continuous_summaries,
-      categorical_tests = categorical_tests,
-      categorical_summaries = categorical_summaries
-   )
-   
-   # ---- printing (teaching outputs only) ----
-   if (isTRUE(auto_print)) {
+      res <- list(
+         alpha = alpha,
+         variable = v,
+         type = "categorical",
+         overall_test = overall_test,
+         details = details
+      )
       
-      if (nrow(continuous_tests) > 0) {
-         cat("\nContinuous variables (p-values):\n")
-         print(continuous_tests[, c("Variable", "Test", "p_value", "Significant")], row.names = FALSE)
-      }
-      
-      sig_cont <- names(continuous_summaries)
-      if (length(sig_cont) > 0) {
-         cat("\nContinuous variables (cluster summaries of significant variables):\n")
-         for (v in sig_cont) {
-            cat("\n--- ", v, " ---\n", sep = "")
-            print(continuous_summaries[[v]]$summary, row.names = FALSE)
-            cat(continuous_summaries[[v]]$differences, "\n")
+      if (isTRUE(auto_print)) {
+         .heading(paste0("Variable: ", v, " (categorical)"))
+         .block("Overall test", overall_test, row.names = FALSE)
+         
+         if (isTRUE(overall_test$Significant[1]) && !is.null(details)) {
+            .block("Cross-tab (column %; clusters are columns)", details$crosstab_colpct, row.names = FALSE)
+            .block("Post-hoc (Holm-adjusted p-values)", as.matrix(details$posthoc_table), row.names = TRUE)
+         } else {
+            cat("\nNot significant at alpha = ", alpha, "; no post-hoc shown.\n", sep = "")
          }
-      } else {
-         cat("\nContinuous variables (cluster summaries of significant variables): none\n")
+         
+         return(invisible(NULL))
       }
       
-      if (nrow(categorical_tests) > 0) {
-         cat("\nCategorical variables (overall tests):\n")
-         print(categorical_tests[, c("Variable", "Test", "p_value", "Significant")], row.names = FALSE)
-      }
-      
-      sig_cat <- names(categorical_summaries)
-      if (length(sig_cat) > 0) {
-         cat("\nCategorical variables (details for significant variables):\n")
-         for (v in sig_cat) {
-            cat("\n--- ", v, " ---\n", sep = "")
-            cat("Cross-tab (column %; clusters are columns):\n")
-            print(categorical_summaries[[v]]$crosstab_colpct)
-            cat("\nPost-hoc (Holm-adjusted p-values):\n")
-            print(categorical_summaries[[v]]$posthoc_table)
-         }
-      } else {
-         cat("\nCategorical variables (details for significant variables): none\n")
-      }
+      return(invisible(res))
    }
-   
-   invisible(res)
 }
