@@ -39,3 +39,4 @@ wssplot(sc.clvar, nc = 10, seed = 1000)
 }
 
 }
+\keyword{internal}

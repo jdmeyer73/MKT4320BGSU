@@ -26,6 +26,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 logreg_roc <- function(MOD, DATA) {
    
    .Deprecated("roc_logistic")

@@ -40,3 +40,4 @@ clustop(sc.clvar, dist = "euc", method = "ward", minclust = 1, maxclust = 15)
 }
 
 }
+\keyword{internal}

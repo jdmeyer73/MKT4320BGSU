@@ -41,6 +41,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 mymp <- function(model, focal, int = NULL) {
    .Deprecated("easy_mp", package = "MKT4320BGSU")
    easy_mp(model = model, focal = focal, int = int)

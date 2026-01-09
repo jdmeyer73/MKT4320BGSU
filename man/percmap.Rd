@@ -38,3 +38,4 @@ percmap(mydata, group = "brand", pref = "liking")
 }
 
 }
+\keyword{internal}

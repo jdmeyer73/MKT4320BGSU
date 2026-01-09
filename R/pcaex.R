@@ -52,6 +52,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 pcaex <- function(data, group, pref, comp = NULL) {
    .Deprecated(c("easy_pca_fit", "easy_pca_final"), package = "MKT4320BGSU")
    

@@ -55,3 +55,4 @@ liftplot(results$all, "recency", "history", ar = 1, ci = 0.95)
 }
 
 }
+\keyword{internal}

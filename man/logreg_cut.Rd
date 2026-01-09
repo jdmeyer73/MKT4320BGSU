@@ -41,3 +41,4 @@ logreg_cut(model, train, "Yes")
 }
 
 }
+\keyword{internal}

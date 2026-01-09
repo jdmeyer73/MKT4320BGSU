@@ -32,4 +32,4 @@ hphones
 Ratings-based conjoint analysis data for headphones, where respondents
 evaluated multiple product profiles defined by brand and features.
 }
-\keyword{datasets}
+\keyword{internal}

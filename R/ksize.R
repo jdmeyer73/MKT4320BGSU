@@ -32,6 +32,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 ksize <- function(data, centers, nstart = 25, seed = 4320) {
    .Deprecated("easy_km_fit", package = "MKT4320BGSU")
    

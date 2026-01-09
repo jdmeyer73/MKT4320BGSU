@@ -20,4 +20,5 @@
 #'   \item{age}{Numeric. Respondent age in years.}
 #' }
 #' @source Collected from MKT 3200 students for instructional purposes.
+#' @keywords internal
 "airlineca"

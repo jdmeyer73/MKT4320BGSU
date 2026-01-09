@@ -19,7 +19,7 @@
 #' @export
 #'
 #' @importFrom ggplot2 ggplot
-
+#' @keywords internal
 easy_mp_plot <- function(model, focal, int = NULL) {
    out <- easy_mp(model, focal, int)
    out$plot

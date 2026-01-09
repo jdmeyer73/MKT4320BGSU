@@ -36,3 +36,4 @@ logreg_roc(model, train)
 }
 
 }
+\keyword{internal}

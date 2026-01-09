@@ -30,3 +30,4 @@ This wrapper forwards arguments to \code{easy_ab_ate()} with \code{ft = TRUE}.
 # easy_ab_ate(m, "promotion")      # preferred
 
 }
+\keyword{internal}

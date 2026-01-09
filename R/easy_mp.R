@@ -18,6 +18,12 @@
 #'   (\code{family = "binomial"}).
 #' @param focal Character string; name of the focal predictor variable.
 #' @param int Optional character string; name of the interaction variable.
+#' @param focal_range Optional numeric override for the focal predictor values
+#'   (only used when the focal predictor is continuous). Provide either a
+#'   length-2 numeric vector \code{c(min, max)} to generate a sequence of
+#'   values, or a numeric vector of explicit values to use.
+#' @param ci Logical; include confidence intervals (bands/error bars)?
+#'   Default is \code{TRUE}.
 #'
 #' @return A list with components:
 #' \describe{
@@ -29,19 +35,16 @@
 #'
 #' @examples
 #' \dontrun{
-#' # No interaction
 #' data(airlinesat)
 #' model1 <- lm(nps ~ age + nflights, data = airlinesat)
+#'
+#' # Default focal range
 #' out1 <- easy_mp(model1, "age")
 #' out1$plot
 #'
-#' # With interaction
-#' data(directmktg)
-#' model2 <- glm(buy ~ salary + age * gender,
-#'               data = directmktg,
-#'               family = "binomial")
-#' out2 <- easy_mp(model2, "age", "gender")
-#' out2$plot
+#' # Override focal range (continuous focal)
+#' out1b <- easy_mp(model1, "age", focal_range = c(20, 70), ci = FALSE)
+#' out1b$plot
 #' }
 #'
 #' @export
@@ -50,7 +53,8 @@
 #' @importFrom insight find_parameters find_terms find_interactions
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_ribbon geom_errorbar
 #'   facet_wrap labs theme_bw theme element_blank element_text as_labeller
-easy_mp <- function(model, focal, int = NULL) {
+easy_mp <- function(model, focal, int = NULL, focal_range = NULL, ci = TRUE) {
+   
    # ---- small internal helpers ----
    
    # Value sequence for continuous interaction variable
@@ -70,7 +74,7 @@ easy_mp <- function(model, focal, int = NULL) {
       }
    }
    
-   # Value sequence for continuous focal variable
+   # Value sequence for continuous focal variable (default behavior)
    myval_f <- function(x) {
       rng  <- range(x, na.rm = TRUE)
       step <- (rng[2] - rng[1]) / 100
@@ -84,6 +88,39 @@ easy_mp <- function(model, focal, int = NULL) {
          digits <- abs(floor(log10(abs(step))))
          vals   <- seq(rng[1], rng[2], by = step)
          round(vals, digits)
+      }
+   }
+   
+   # Override focal sequence (only for continuous focal)
+   build_focal_vals <- function(x, focal_range = NULL) {
+      if (is.null(focal_range)) return(myval_f(x))
+      
+      if (!is.numeric(focal_range)) {
+         stop("`focal_range` must be numeric when provided.", call. = FALSE)
+      }
+      
+      fr <- focal_range[is.finite(focal_range)]
+      if (length(fr) < 2) {
+         stop("`focal_range` must have at least 2 finite numeric values.", call. = FALSE)
+      }
+      
+      # If user supplies a length-2 range, generate ~101 points (matching default density)
+      if (length(fr) == 2) {
+         lo <- min(fr); hi <- max(fr)
+         if (!is.finite(lo) || !is.finite(hi) || lo == hi) return(lo)
+         
+         step <- (hi - lo) / 100
+         if (step > 1) {
+            vals <- seq(lo, hi, by = step)
+            round(vals)
+         } else {
+            digits <- abs(floor(log10(abs(step))))
+            vals   <- seq(lo, hi, by = step)
+            round(vals, digits)
+         }
+      } else {
+         # Otherwise, treat as explicit values
+         sort(unique(fr))
       }
    }
    
@@ -159,7 +196,7 @@ easy_mp <- function(model, focal, int = NULL) {
    f_data <- if (log_f) exp(f_raw) else f_raw
    
    if (f_num) {
-      f.val <- myval_f(f_data)
+      f.val <- build_focal_vals(f_data, focal_range = focal_range)
    }
    
    # Interaction variable handling (only if supplied)
@@ -237,16 +274,20 @@ easy_mp <- function(model, focal, int = NULL) {
       plot <- ptable |>
          ggplot2::ggplot(ggplot2::aes(x = x, y = predicted)) +
          ggplot2::geom_line(linewidth = 1, color = "darkorange") +
-         ggplot2::geom_ribbon(
-            ggplot2::aes(ymin = conf.low, ymax = conf.high),
-            alpha = 0.2,
-            fill  = "darkorange"
-         ) +
          ggplot2::labs(
             y = ylabel,
             x = get_x_title(focal)
          ) +
          ggplot2::theme_bw()
+      
+      if (isTRUE(ci)) {
+         plot <- plot +
+            ggplot2::geom_ribbon(
+               ggplot2::aes(ymin = conf.low, ymax = conf.high),
+               alpha = 0.2,
+               fill  = "darkorange"
+            )
+      }
       
    } else if (plot.type == "cat.null") {
       
@@ -262,11 +303,6 @@ easy_mp <- function(model, focal, int = NULL) {
       plot <- ptable |>
          ggplot2::ggplot(ggplot2::aes(x = x, y = predicted, color = x)) +
          ggplot2::geom_point(size = 4) +
-         ggplot2::geom_errorbar(
-            ggplot2::aes(ymin = conf.low, ymax = conf.high),
-            width     = 0.5,
-            linewidth = 1
-         ) +
          ggplot2::labs(
             y = ylabel,
             x = get_x_title(focal)
@@ -277,6 +313,15 @@ easy_mp <- function(model, focal, int = NULL) {
             panel.grid.major.x = ggplot2::element_blank(),
             legend.position    = "none"
          )
+      
+      if (isTRUE(ci)) {
+         plot <- plot +
+            ggplot2::geom_errorbar(
+               ggplot2::aes(ymin = conf.low, ymax = conf.high),
+               width     = 0.5,
+               linewidth = 1
+            )
+      }
       
    } else if (plot.type == "cont.cont") {
       
@@ -290,33 +335,56 @@ easy_mp <- function(model, focal, int = NULL) {
          ptable$conf.high <- exp(ptable$conf.high)
       }
       
-      plot <- ptable |>
-         ggplot2::ggplot(
-            ggplot2::aes(
-               x     = x,
-               y     = predicted,
-               color = group,
-               fill  = group
+      if (isTRUE(ci)) {
+         plot <- ptable |>
+            ggplot2::ggplot(
+               ggplot2::aes(
+                  x     = x,
+                  y     = predicted,
+                  color = group,
+                  fill  = group
+               )
+            ) +
+            ggplot2::geom_line(linewidth = 1) +
+            ggplot2::geom_ribbon(
+               ggplot2::aes(ymin = conf.low, ymax = conf.high),
+               alpha = 0.2
+            ) +
+            scale_fill_cvi_d("bgsu", n = 4) +
+            scale_color_cvi_d("bgsu", n = 4) +
+            ggplot2::labs(
+               y     = ylabel,
+               x     = get_x_title(focal),
+               color = get_legend_title(int),
+               fill  = get_legend_title(int)
+            ) +
+            ggplot2::theme_bw() +
+            ggplot2::theme(
+               panel.grid.major.x = ggplot2::element_blank(),
+               legend.position    = "bottom"
             )
-         ) +
-         ggplot2::geom_line(linewidth = 1) +
-         ggplot2::geom_ribbon(
-            ggplot2::aes(ymin = conf.low, ymax = conf.high),
-            alpha = 0.2
-         ) +
-         scale_fill_cvi_d("bgsu", n = 4) +
-         scale_color_cvi_d("bgsu", n = 4) +
-         ggplot2::labs(
-            y     = ylabel,
-            x     = get_x_title(focal),
-            color = get_legend_title(int),
-            fill  = get_legend_title(int)
-         ) +
-         ggplot2::theme_bw() +
-         ggplot2::theme(
-            panel.grid.major.x = ggplot2::element_blank(),
-            legend.position    = "bottom"
-         )
+      } else {
+         plot <- ptable |>
+            ggplot2::ggplot(
+               ggplot2::aes(
+                  x     = x,
+                  y     = predicted,
+                  color = group
+               )
+            ) +
+            ggplot2::geom_line(linewidth = 1) +
+            scale_color_cvi_d("bgsu", n = 4) +
+            ggplot2::labs(
+               y     = ylabel,
+               x     = get_x_title(focal),
+               color = get_legend_title(int)
+            ) +
+            ggplot2::theme_bw() +
+            ggplot2::theme(
+               panel.grid.major.x = ggplot2::element_blank(),
+               legend.position    = "bottom"
+            )
+      }
       
    } else if (plot.type == "cont.cat") {
       
@@ -332,33 +400,56 @@ easy_mp <- function(model, focal, int = NULL) {
       
       colorn <- length(unique(ptable$group))
       
-      plot <- ptable |>
-         ggplot2::ggplot(
-            ggplot2::aes(
-               x     = x,
-               y     = predicted,
-               color = group,
-               fill  = group
+      if (isTRUE(ci)) {
+         plot <- ptable |>
+            ggplot2::ggplot(
+               ggplot2::aes(
+                  x     = x,
+                  y     = predicted,
+                  color = group,
+                  fill  = group
+               )
+            ) +
+            ggplot2::geom_line(linewidth = 1) +
+            ggplot2::geom_ribbon(
+               ggplot2::aes(ymin = conf.low, ymax = conf.high),
+               alpha = 0.2
+            ) +
+            scale_fill_cvi_d("bgsu", n = colorn) +
+            scale_color_cvi_d("bgsu", n = colorn) +
+            ggplot2::labs(
+               y     = ylabel,
+               x     = get_x_title(focal),
+               color = get_legend_title(int),
+               fill  = get_legend_title(int)
+            ) +
+            ggplot2::theme_bw() +
+            ggplot2::theme(
+               panel.grid.major.x = ggplot2::element_blank(),
+               legend.position    = "bottom"
             )
-         ) +
-         ggplot2::geom_line(linewidth = 1) +
-         ggplot2::geom_ribbon(
-            ggplot2::aes(ymin = conf.low, ymax = conf.high),
-            alpha = 0.2
-         ) +
-         scale_fill_cvi_d("bgsu", n = colorn) +
-         scale_color_cvi_d("bgsu", n = colorn) +
-         ggplot2::labs(
-            y     = ylabel,
-            x     = get_x_title(focal),
-            color = get_legend_title(int),
-            fill  = get_legend_title(int)
-         ) +
-         ggplot2::theme_bw() +
-         ggplot2::theme(
-            panel.grid.major.x = ggplot2::element_blank(),
-            legend.position    = "bottom"
-         )
+      } else {
+         plot <- ptable |>
+            ggplot2::ggplot(
+               ggplot2::aes(
+                  x     = x,
+                  y     = predicted,
+                  color = group
+               )
+            ) +
+            ggplot2::geom_line(linewidth = 1) +
+            scale_color_cvi_d("bgsu", n = colorn) +
+            ggplot2::labs(
+               y     = ylabel,
+               x     = get_x_title(focal),
+               color = get_legend_title(int)
+            ) +
+            ggplot2::theme_bw() +
+            ggplot2::theme(
+               panel.grid.major.x = ggplot2::element_blank(),
+               legend.position    = "bottom"
+            )
+      }
       
    } else if (plot.type == "cat.cont") {
       
@@ -373,11 +464,6 @@ easy_mp <- function(model, focal, int = NULL) {
       plot <- ptable |>
          ggplot2::ggplot(ggplot2::aes(x = x, y = predicted, group = 1)) +
          ggplot2::geom_point(ggplot2::aes(color = x), size = 4) +
-         ggplot2::geom_errorbar(
-            ggplot2::aes(ymin = conf.low, ymax = conf.high, color = x),
-            width     = 0.5,
-            linewidth = 1
-         ) +
          ggplot2::labs(
             y = ylabel,
             x = get_x_title(focal)
@@ -392,6 +478,15 @@ easy_mp <- function(model, focal, int = NULL) {
             panel.grid.major.x = ggplot2::element_blank(),
             legend.position    = "none"
          )
+      
+      if (isTRUE(ci)) {
+         plot <- plot +
+            ggplot2::geom_errorbar(
+               ggplot2::aes(ymin = conf.low, ymax = conf.high, color = x),
+               width     = 0.5,
+               linewidth = 1
+            )
+      }
       
    } else if (plot.type == "cat.cat") {
       
@@ -406,11 +501,6 @@ easy_mp <- function(model, focal, int = NULL) {
       plot <- ptable |>
          ggplot2::ggplot(ggplot2::aes(x = x, y = predicted, group = 1)) +
          ggplot2::geom_point(ggplot2::aes(color = x), size = 4) +
-         ggplot2::geom_errorbar(
-            ggplot2::aes(ymin = conf.low, ymax = conf.high, color = x),
-            width     = 0.5,
-            linewidth = 1
-         ) +
          ggplot2::labs(
             y = ylabel,
             x = get_x_title(focal)
@@ -425,6 +515,15 @@ easy_mp <- function(model, focal, int = NULL) {
             panel.grid.major.x = ggplot2::element_blank(),
             legend.position    = "none"
          )
+      
+      if (isTRUE(ci)) {
+         plot <- plot +
+            ggplot2::geom_errorbar(
+               ggplot2::aes(ymin = conf.low, ymax = conf.high, color = x),
+               width     = 0.5,
+               linewidth = 1
+            )
+      }
    }
    
    list(plot = plot, ptable = ptable)

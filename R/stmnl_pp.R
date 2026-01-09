@@ -32,6 +32,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 stmnl_pp <- function(model, focal, xlab = NULL, ft_table = FALSE) {
    .Deprecated("pp_std_mnl", package = "MKT4320BGSU")
    pp_std_mnl(model = model, focal = focal, xlab = xlab, ft_table = ft_table)

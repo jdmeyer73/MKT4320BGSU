@@ -34,6 +34,7 @@
 #' \dontrun{
 #' res <- reguplift(model.visit.w, "promotion", ng = 10)
 #' }
+#' @keywords internal
 reguplift <- function(model,
                       treatment,
                       pdata = NULL,

@@ -28,6 +28,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 percmap <- function(data, group, pref) {
    .Deprecated("easy_pca_maps", package = "MKT4320BGSU")
    

@@ -56,6 +56,7 @@
 #'
 #' @importFrom utils packageName
 #' @export
+#' @keywords internal
 asmnl_me <- function(mod,
                      me_method = c("means", "observed"),
                      me_step = 1,

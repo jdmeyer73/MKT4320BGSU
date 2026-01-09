@@ -44,3 +44,4 @@ logreg_cm(model, train, "Yes", 0.6)
 }
 
 }
+\keyword{internal}

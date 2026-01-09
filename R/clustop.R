@@ -21,6 +21,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 clustop <- function(data,
                     dist = c("euc", "max", "abs", "bin"),
                     method = c("ward", "single", "complete", "average"),

@@ -31,6 +31,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 logreg_cut <- function(MOD, DATA, POS) {
    
    .Deprecated("cutoff_logistic")

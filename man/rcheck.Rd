@@ -47,3 +47,4 @@ rcheck(email.camp.w, "promotion", outcome = "buy", nice = "ft")
 \seealso{
 \code{\link[=rand_check]{rand_check()}}
 }
+\keyword{internal}

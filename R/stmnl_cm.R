@@ -27,6 +27,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 stmnl_cm <- function(model, data) {
    .Deprecated("eval_std_mnl", package = "MKT4320BGSU")
    

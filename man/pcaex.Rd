@@ -62,3 +62,4 @@ res2$rotated
 }
 
 }
+\keyword{internal}

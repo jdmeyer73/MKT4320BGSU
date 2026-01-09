@@ -35,6 +35,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 gainlift <- function(MOD, TRAIN, TEST, POSITIVE) {
    
    .Deprecated("gainlift_logistic")

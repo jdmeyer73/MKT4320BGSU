@@ -28,6 +28,7 @@
 #' Invisibly returns the result from \code{\link{easy_cluster_describe}}.
 #'
 #' @export
+#' @keywords internal
 cldescr <- function(data, var, vtype = c("F", "C"), cvar) {
    
    .Deprecated("easy_cluster_describe")

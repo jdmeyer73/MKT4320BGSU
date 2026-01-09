@@ -10,4 +10,5 @@
 #'   \item{sales}{Numeric. Monthly sales in thousands of U.S. dollars.}
 #' }
 #' @source Unknown.
+#' @keywords internal
 "sales03"

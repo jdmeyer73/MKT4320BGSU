@@ -37,6 +37,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 liftplot <- function(data, var = NULL, byvar = NULL, ar = NULL,
                      ci = c(0.90, 0.95, 0.975, 0.99, 0)) {
    .Deprecated("easy_liftplots", package = "MKT4320BGSU")

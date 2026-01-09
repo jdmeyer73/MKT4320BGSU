@@ -58,3 +58,4 @@ res <- reguplift(model.visit.w, "promotion", ng = 10)
 \seealso{
 \code{\link[=easy_uplift]{easy_uplift()}}
 }
+\keyword{internal}

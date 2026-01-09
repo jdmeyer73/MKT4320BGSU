@@ -34,6 +34,7 @@
 #' \dontrun{
 #' rcheck(email.camp.w, "promotion", outcome = "buy", nice = "ft")
 #' }
+#' @keywords internal
 rcheck <- function(data, treatment, outcome = NULL, nice = c("no", "ft", "ht")) {
    
    .Deprecated("rand_check", package = "MKT4320BGSU")

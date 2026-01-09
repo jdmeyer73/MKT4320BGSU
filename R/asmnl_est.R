@@ -36,6 +36,7 @@
 #' @importFrom mlogit mlogit
 #' @importFrom utils packageName
 #' @export
+#' @keywords internal
 asmnl_est <- function(formula, data, id, alt, choice, testdata = NULL) {
    
    .Deprecated(

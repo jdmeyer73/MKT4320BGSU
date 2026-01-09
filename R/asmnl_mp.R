@@ -41,6 +41,7 @@
 #'
 #' @importFrom utils packageName
 #' @export
+#' @keywords internal
 asmnl_mp <- function(mod, focal, type = c("C", "D")) {
    
    .Deprecated(

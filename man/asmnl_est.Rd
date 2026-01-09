@@ -47,3 +47,4 @@ to print fit, coefficients (including odds ratios), and classification results.
 #                  choice="choice", testdata=test_long)
 
 }
+\keyword{internal}

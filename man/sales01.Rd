@@ -21,4 +21,4 @@ sales01
 Monthly sales data for a durable goods manufacturer from January 2008 through
 December 2018. Sales are measured in thousands of dollars.
 }
-\keyword{datasets}
+\keyword{internal}

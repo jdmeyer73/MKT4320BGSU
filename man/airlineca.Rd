@@ -31,4 +31,4 @@ airline profiles defined by multiple attributes.
 \details{
 Each respondent evaluated 9 airline profiles.
 }
-\keyword{datasets}
+\keyword{internal}

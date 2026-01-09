@@ -20,6 +20,7 @@
 #' # easy_ab_ate(m, "promotion")      # preferred
 #'
 #' @export
+#' @keywords internal
 abate <- function(model, treatment) {
    .Deprecated(
       new = "easy_ab_ate",

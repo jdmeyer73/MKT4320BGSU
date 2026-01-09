@@ -38,3 +38,4 @@ and \code{tukey} objects are no longer returned. See
 \code{\link{easy_cluster_describe}} for the new return format.
 }
 }
+\keyword{internal}

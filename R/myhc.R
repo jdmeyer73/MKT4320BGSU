@@ -55,6 +55,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 myhc <- function(data,
                  dist = c("euc", "euc2", "max", "abs", "bin"),
                  method = c("ward", "single", "complete", "average"),

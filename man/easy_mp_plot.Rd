@@ -31,3 +31,4 @@ easy_mp_plot(model1, "age")
 \seealso{
 \code{\link{easy_mp_plot}}
 }
+\keyword{internal}

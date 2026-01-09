@@ -42,6 +42,7 @@
 #'
 #' @importFrom stats reshape
 #' @importFrom ggplot2 ggplot aes geom_col theme labs
+#' @keywords internal
 kcenters <- function(kobject, k = NULL) {
    .Deprecated("easy_km_final", package = "MKT4320BGSU")
    

@@ -33,6 +33,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 logreg_cm <- function(MOD, DATA, POSITIVE, CUTOFF = 0.5) {
    
    .Deprecated("classify_logistic")

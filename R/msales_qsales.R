@@ -8,6 +8,7 @@
 #'   \item{qsales}{A data frame.}
 #' }
 #'
+#' @keywords internal
 #' @keywords datasets
 "msales"
 

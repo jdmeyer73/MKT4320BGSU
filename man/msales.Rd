@@ -22,3 +22,4 @@ qsales
 Legacy datasets used in older course materials.
 }
 \keyword{datasets}
+\keyword{internal}

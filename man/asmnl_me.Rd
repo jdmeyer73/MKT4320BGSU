@@ -74,3 +74,4 @@ pp_as_mnl(mod, focal_var = "income", marginal = TRUE,
 # out[["income"]]$me_table
 
 }
+\keyword{internal}

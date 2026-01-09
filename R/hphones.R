@@ -21,4 +21,5 @@
 #'   \item{gender}{Factor or character. Respondent gender.}
 #' }
 #' @source Unknown.
+#' @keywords internal
 "hphones"

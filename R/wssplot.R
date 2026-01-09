@@ -28,6 +28,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 wssplot <- function(data, nc = 15, seed = 4320) {
    .Deprecated("easy_km_fit", package = "MKT4320BGSU")
    
