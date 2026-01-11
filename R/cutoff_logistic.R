@@ -1,4 +1,5 @@
 #' @title Cutoff Diagnostics for Binary Logistic Regression
+#'
 #' @description
 #' Plot sensitivity, specificity, and accuracy across classification cutoffs
 #' for a fitted binary logistic regression model. Can be used for a single
@@ -6,7 +7,7 @@
 #' using the same fitted model.
 #'
 #' @details
-#' The outcome variable MUST be a factor with exactly two levels, and
+#' The outcome variable must be a factor with exactly two levels, and
 #' \code{POSITIVE} must match one of those levels.
 #'
 #' For each cutoff from 0 to 1 in steps of 0.01, the function computes:
@@ -15,8 +16,9 @@
 #'   \item Specificity (True Negative Rate)
 #'   \item Accuracy
 #' }
-#' and produces a ggplot line chart with a consistent visual style
-#' (theme_bw, legend at bottom) to help choose a reasonable cutoff.
+#'
+#' A ggplot line chart is produced for each data set with a consistent visual
+#' style (theme_bw, legend at bottom) to help evaluate reasonable cutoff values.
 #'
 #' @param MOD Fitted binary logistic regression model (\code{glm} with
 #'   \code{family = "binomial"}).
@@ -27,31 +29,35 @@
 #'   Defaults to \code{"Sample 1"}.
 #' @param DATA2 Optional second data frame (e.g., test/holdout data) for
 #'   which a second cutoff diagnostics plot is produced. Defaults to
-#'   \code{NULL} (no second data set).
+#'   \code{NULL}.
 #' @param LABEL2 Character label for \code{DATA2} used in the second plot
 #'   title. Defaults to \code{"Sample 2"}.
+#' @param auto_print Logical; if \code{TRUE} (default), plot(s) are printed
+#'   as a side effect when the function is called. If \code{FALSE}, plot(s)
+#'   are returned but not printed, which is useful when assigning results
+#'   to an object in R Markdown or Bookdown.
 #'
 #' @return
-#' If only \code{DATA} is provided, returns a single \code{ggplot} object
-#' (and prints it).
+#' If only \code{DATA} is provided, returns a single \code{ggplot} object.
 #'
 #' If both \code{DATA} and \code{DATA2} are provided, returns a list with:
 #' \itemize{
 #'   \item \code{$sample1}: ggplot for \code{DATA} (label \code{LABEL1})
 #'   \item \code{$sample2}: ggplot for \code{DATA2} (label \code{LABEL2})
 #' }
-#' and prints both plots.
 #'
 #' @importFrom stats predict family formula
 #' @importFrom ggplot2 ggplot aes geom_line scale_x_continuous scale_y_continuous
 #' @importFrom ggplot2 scale_color_manual labs theme_bw theme element_blank
 #' @export
+
 cutoff_logistic <- function(MOD,
                             DATA,
                             POSITIVE,
                             LABEL1 = "Sample 1",
                             DATA2  = NULL,
-                            LABEL2 = "Sample 2") {
+                            LABEL2 = "Sample 2",
+                            auto_print = TRUE) {
    
    # ---- basic checks ----
    
@@ -195,15 +201,17 @@ cutoff_logistic <- function(MOD,
    p1 <- make_plot(df1, LABEL1)
    
    if (is.null(DATA2)) {
-      print(p1)
+      if (isTRUE(auto_print)) print(p1)
       return(p1)
    }
    
    df2 <- compute_curves(DATA2, LABEL2)
    p2  <- make_plot(df2, LABEL2)
    
-   print(p1)
-   print(p2)
+   if (isTRUE(auto_print)) {
+      print(p1)
+      print(p2)
+   }
    
    return(list(sample1 = p1, sample2 = p2))
 }

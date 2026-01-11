@@ -10,7 +10,8 @@ cutoff_logistic(
   POSITIVE,
   LABEL1 = "Sample 1",
   DATA2 = NULL,
-  LABEL2 = "Sample 2"
+  LABEL2 = "Sample 2",
+  auto_print = TRUE
 )
 }
 \arguments{
@@ -27,21 +28,24 @@ Defaults to \code{"Sample 1"}.}
 
 \item{DATA2}{Optional second data frame (e.g., test/holdout data) for
 which a second cutoff diagnostics plot is produced. Defaults to
-\code{NULL} (no second data set).}
+\code{NULL}.}
 
 \item{LABEL2}{Character label for \code{DATA2} used in the second plot
 title. Defaults to \code{"Sample 2"}.}
+
+\item{auto_print}{Logical; if \code{TRUE} (default), plot(s) are printed
+as a side effect when the function is called. If \code{FALSE}, plot(s)
+are returned but not printed, which is useful when assigning results
+to an object in R Markdown or Bookdown.}
 }
 \value{
-If only \code{DATA} is provided, returns a single \code{ggplot} object
-(and prints it).
+If only \code{DATA} is provided, returns a single \code{ggplot} object.
 
 If both \code{DATA} and \code{DATA2} are provided, returns a list with:
 \itemize{
 \item \code{$sample1}: ggplot for \code{DATA} (label \code{LABEL1})
 \item \code{$sample2}: ggplot for \code{DATA2} (label \code{LABEL2})
 }
-and prints both plots.
 }
 \description{
 Plot sensitivity, specificity, and accuracy across classification cutoffs
@@ -50,7 +54,7 @@ data set (e.g., training) or for two data sets (e.g., training and test)
 using the same fitted model.
 }
 \details{
-The outcome variable MUST be a factor with exactly two levels, and
+The outcome variable must be a factor with exactly two levels, and
 \code{POSITIVE} must match one of those levels.
 
 For each cutoff from 0 to 1 in steps of 0.01, the function computes:
@@ -59,6 +63,7 @@ For each cutoff from 0 to 1 in steps of 0.01, the function computes:
 \item Specificity (True Negative Rate)
 \item Accuracy
 }
-and produces a ggplot line chart with a consistent visual style
-(theme_bw, legend at bottom) to help choose a reasonable cutoff.
+
+A ggplot line chart is produced for each data set with a consistent visual
+style (theme_bw, legend at bottom) to help evaluate reasonable cutoff values.
 }
