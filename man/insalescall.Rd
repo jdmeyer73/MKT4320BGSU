@@ -23,7 +23,7 @@ A data frame with 3,831 rows and 9 variables:
 }
 }
 \source{
-Adapted from the UCI Machine Learning Repository (Bank Marketing).
+Adapted from Kaggle dataset (Car Insurance Cold Calls).
 }
 \usage{
 insalescall
