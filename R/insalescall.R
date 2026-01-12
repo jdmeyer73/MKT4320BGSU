@@ -20,5 +20,5 @@
 #'   \item{preout}{Factor. Outcome of previous non-car insurance call
 #'     (\code{No Previous}, \code{Failure}, \code{Success}).}
 #' }
-#' @source Adapted from the UCI Machine Learning Repository (Bank Marketing).
+#' @source Adapted from Kaggle dataset (Car Insurance Cold Calls).
 "insalescall"

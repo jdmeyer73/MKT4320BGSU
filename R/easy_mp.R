@@ -22,6 +22,11 @@
 #'   (only used when the focal predictor is continuous). Provide either a
 #'   length-2 numeric vector \code{c(min, max)} to generate a sequence of
 #'   values, or a numeric vector of explicit values to use.
+#' @param int_range Optional numeric override for the interaction predictor
+#'   values (only used when the interaction predictor is continuous). Provide
+#'   either a length-2 numeric vector \code{c(min, max)} to generate a sequence
+#'   of values, or a numeric vector of explicit values to use.
+#'   By default, the interaction values are set to 4 representative values.
 #' @param ci Logical; include confidence intervals (bands/error bars)?
 #'   Default is \code{TRUE}.
 #'
@@ -45,6 +50,11 @@
 #' # Override focal range (continuous focal)
 #' out1b <- easy_mp(model1, "age", focal_range = c(20, 70), ci = FALSE)
 #' out1b$plot
+#'
+#' # Override interaction range (continuous interaction)
+#' # model2 <- lm(nps ~ age * nflights, data = airlinesat)
+#' # out2 <- easy_mp(model2, "age", "nflights", int_range = c(0, 30))
+#' # out2$plot
 #' }
 #'
 #' @export
@@ -53,11 +63,11 @@
 #' @importFrom insight find_parameters find_terms find_interactions
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_ribbon geom_errorbar
 #'   facet_wrap labs theme_bw theme element_blank element_text as_labeller
-easy_mp <- function(model, focal, int = NULL, focal_range = NULL, ci = TRUE) {
+easy_mp <- function(model, focal, int = NULL, focal_range = NULL, int_range = NULL, ci = TRUE) {
    
    # ---- small internal helpers ----
    
-   # Value sequence for continuous interaction variable
+   # Value sequence for continuous interaction variable (default behavior)
    myval_i <- function(x, n_levels = 4) {
       quants <- stats::quantile(x, c(0.01, 0.5, 0.99), na.rm = TRUE)
       step   <- (quants[3] - quants[1]) / (n_levels - 1)
@@ -121,6 +131,42 @@ easy_mp <- function(model, focal, int = NULL, focal_range = NULL, ci = TRUE) {
       } else {
          # Otherwise, treat as explicit values
          sort(unique(fr))
+      }
+   }
+   
+   # Override interaction sequence (only for continuous interaction)
+   build_int_vals <- function(x, int_range = NULL, n_levels = 4) {
+      if (is.null(int_range)) return(myval_i(x, n_levels = n_levels))
+      
+      if (!is.numeric(int_range)) {
+         stop("`int_range` must be numeric when provided.", call. = FALSE)
+      }
+      
+      ir <- int_range[is.finite(int_range)]
+      if (length(ir) < 2) {
+         stop("`int_range` must have at least 2 finite numeric values.", call. = FALSE)
+      }
+      
+      # If user supplies a length-2 range, generate n_levels values across that range
+      if (length(ir) == 2) {
+         lo <- min(ir); hi <- max(ir)
+         if (!is.finite(lo) || !is.finite(hi) || lo == hi) return(rep(lo, n_levels))
+         
+         step <- (hi - lo) / (n_levels - 1)
+         
+         if (step <= 0) return(rep((lo + hi) / 2, n_levels))
+         
+         if (step > 1) {
+            vals <- seq(lo, hi, by = step)
+            round(vals)
+         } else {
+            digits <- abs(floor(log10(abs(step))))
+            vals   <- seq(lo, hi, by = step)
+            round(vals, digits)
+         }
+      } else {
+         # Otherwise, treat as explicit values
+         sort(unique(ir))
       }
    }
    
@@ -214,7 +260,7 @@ easy_mp <- function(model, focal, int = NULL, focal_range = NULL, ci = TRUE) {
       i_data <- if (log_i) exp(i_raw) else i_raw
       
       if (i_num) {
-         i.val <- myval_i(i_data, n_levels = 4)
+         i.val <- build_int_vals(i_data, int_range = int_range, n_levels = 4)
       }
    }
    

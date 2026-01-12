@@ -4,7 +4,14 @@
 \alias{easy_mp}
 \title{Easy Marginal Effects Plots}
 \usage{
-easy_mp(model, focal, int = NULL, focal_range = NULL, ci = TRUE)
+easy_mp(
+  model,
+  focal,
+  int = NULL,
+  focal_range = NULL,
+  int_range = NULL,
+  ci = TRUE
+)
 }
 \arguments{
 \item{model}{A fitted \code{lm} model or binary logistic \code{glm} model
@@ -18,6 +25,12 @@ easy_mp(model, focal, int = NULL, focal_range = NULL, ci = TRUE)
 (only used when the focal predictor is continuous). Provide either a
 length-2 numeric vector \code{c(min, max)} to generate a sequence of
 values, or a numeric vector of explicit values to use.}
+
+\item{int_range}{Optional numeric override for the interaction predictor
+values (only used when the interaction predictor is continuous). Provide
+either a length-2 numeric vector \code{c(min, max)} to generate a sequence
+of values, or a numeric vector of explicit values to use.
+By default, the interaction values are set to 4 representative values.}
 
 \item{ci}{Logical; include confidence intervals (bands/error bars)?
 Default is \code{TRUE}.}
@@ -55,6 +68,11 @@ out1$plot
 # Override focal range (continuous focal)
 out1b <- easy_mp(model1, "age", focal_range = c(20, 70), ci = FALSE)
 out1b$plot
+
+# Override interaction range (continuous interaction)
+# model2 <- lm(nps ~ age * nflights, data = airlinesat)
+# out2 <- easy_mp(model2, "age", "nflights", int_range = c(0, 30))
+# out2$plot
 }
 
 }
