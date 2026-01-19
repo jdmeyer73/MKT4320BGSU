@@ -11,10 +11,8 @@
 #' \code{\link{easy_km_final}}.
 #'
 #' Diagnostic outputs include within-cluster sum of squares (WSS), average
-#' silhouette width, the Gap statistic, and cluster-size
+#' silhouette width, the Gap statistic (using the 1-SE rule), and cluster-size
 #' balance measures. A table of cluster size proportions is also returned to help
-#' A scree (elbow) plot of WSS is also returned to help visualize the
-#' tradeoff between increasing k and within-cluster fit.
 #' assess whether candidate solutions contain very small or dominant clusters.
 #'
 #' @param data A data frame containing the full dataset.
@@ -29,6 +27,9 @@
 #'   run (default = 100).
 #' @param B Integer; number of Monte Carlo bootstrap samples used to compute the
 #'   Gap statistic (default = 20).
+#' @param verbose_gap Logical. If \code{FALSE} (default), suppresses progress
+#'   output printed by the Gap Statistic bootstrapping procedure. Set to
+#'   \code{TRUE} to show progress.
 #' @param seed Integer; random seed for reproducible results
 #'   (default = 4320).
 #'
@@ -75,7 +76,7 @@
 #'
 #' @importFrom stats kmeans sd
 #' @importFrom cluster silhouette clusGap
-#' @importFrom ggplot2 ggplot aes geom_line geom_point labs theme_bw scale_x_continuous
+#' @importFrom ggplot2 ggplot aes geom_line geom_point labs theme_bw
 #' @importFrom flextable flextable add_header_lines add_footer_lines
 #' @importFrom flextable align bold colformat_double autofit
 #' @export
@@ -86,6 +87,7 @@ easy_km_fit <- function(data,
                         nstart      = 25,
                         iter.max    = 100,
                         B           = 20,
+                        verbose_gap = FALSE,
                         seed        = 4320) {
    
    # ---- validate inputs ----
@@ -217,7 +219,8 @@ easy_km_fit <- function(data,
          list(cluster = km$cluster)
       },
       K.max = k_max,
-      B     = B
+      B     = B,
+      verbose = isTRUE(verbose_gap)
    )
    
    gap_tab  <- as.data.frame(gap_res$Tab)
@@ -225,6 +228,10 @@ easy_km_fit <- function(data,
    k_seq    <- k_min:k_max
    gap_vals <- gap_tab$gap[match(k_seq, rn_k)]
    se_vals  <- gap_tab$SE.sim[match(k_seq, rn_k)]
+   
+   # Note: we intentionally do not apply the 1-SE Gap rule or highlight a "best"
+   # Gap.Stat value in the diagnostics table. The Gap statistic is reported for
+   # reference only.
    
    # ---- cluster size proportions table (by k) ----
    size_prop_mat <- matrix(NA_real_, nrow = length(k_range), ncol = k_max)
@@ -297,9 +304,9 @@ easy_km_fit <- function(data,
    # Remove the 1-cluster (k = 1) row from the diagnostics table
    diag_raw <- diag_raw[diag_raw$Clusters != 1, , drop = FALSE]
    
-   
    # ---- formatted symbol columns ----
    gap_char <- ifelse(is.na(diag_raw$Gap.Stat), NA_character_, sprintf("%.4f", diag_raw$Gap.Stat))
+   
    sil_char <- ifelse(is.na(diag_raw$Silhouette), NA_character_, sprintf("%.4f", diag_raw$Silhouette))
    
    small_char <- ifelse(is.na(diag_raw$Small.Prop), NA_character_, sprintf("%.4f", diag_raw$Small.Prop))
@@ -356,6 +363,7 @@ easy_km_fit <- function(data,
       nstart       = nstart,
       iter.max     = iter.max,
       B            = B,
+      verbose_gap  = verbose_gap,
       seed         = seed
    )
    
