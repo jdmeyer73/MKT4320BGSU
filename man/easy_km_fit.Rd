@@ -75,8 +75,10 @@ membership can be reattached to the original dataset using
 \code{\link{easy_km_final}}.
 
 Diagnostic outputs include within-cluster sum of squares (WSS), average
-silhouette width, the Gap statistic (using the 1-SE rule), and cluster-size
+silhouette width, the Gap statistic, and cluster-size
 balance measures. A table of cluster size proportions is also returned to help
+A scree (elbow) plot of WSS is also returned to help visualize the
+tradeoff between increasing k and within-cluster fit.
 assess whether candidate solutions contain very small or dominant clusters.
 }
 \examples{

@@ -11,8 +11,10 @@
 #' \code{\link{easy_km_final}}.
 #'
 #' Diagnostic outputs include within-cluster sum of squares (WSS), average
-#' silhouette width, the Gap statistic (using the 1-SE rule), and cluster-size
+#' silhouette width, the Gap statistic, and cluster-size
 #' balance measures. A table of cluster size proportions is also returned to help
+#' A scree (elbow) plot of WSS is also returned to help visualize the
+#' tradeoff between increasing k and within-cluster fit.
 #' assess whether candidate solutions contain very small or dominant clusters.
 #'
 #' @param data A data frame containing the full dataset.
@@ -73,7 +75,7 @@
 #'
 #' @importFrom stats kmeans sd
 #' @importFrom cluster silhouette clusGap
-#' @importFrom ggplot2 ggplot aes geom_line geom_point labs theme_bw
+#' @importFrom ggplot2 ggplot aes geom_line geom_point labs theme_bw scale_x_continuous
 #' @importFrom flextable flextable add_header_lines add_footer_lines
 #' @importFrom flextable align bold colformat_double autofit
 #' @export
@@ -224,16 +226,6 @@ easy_km_fit <- function(data,
    gap_vals <- gap_tab$gap[match(k_seq, rn_k)]
    se_vals  <- gap_tab$SE.sim[match(k_seq, rn_k)]
    
-   # ---- 1-SE Gap rule ----
-   is_gap_1se <- rep(FALSE, length(k_seq))
-   valid_idx  <- which(k_seq >= 2 & !is.na(gap_vals) & !is.na(se_vals))
-   if (length(valid_idx) > 0) {
-      idx_max <- valid_idx[which.max(gap_vals[valid_idx])]
-      thresh  <- gap_vals[idx_max] - se_vals[idx_max]
-      cand    <- valid_idx[gap_vals[valid_idx] >= thresh]
-      if (length(cand) > 0) is_gap_1se[cand[1]] <- TRUE
-   }
-   
    # ---- cluster size proportions table (by k) ----
    size_prop_mat <- matrix(NA_real_, nrow = length(k_range), ncol = k_max)
    colnames(size_prop_mat) <- paste0("Cluster ", seq_len(k_max))
@@ -261,7 +253,7 @@ easy_km_fit <- function(data,
          size_prop_mat[i, cl_ids] <- props
       }
    }
-  
+   
    # ---- size proportion tables ----
    size_prop_raw <- data.frame(
       Solution = rownames(size_prop_mat),
@@ -302,18 +294,12 @@ easy_km_fit <- function(data,
       CV           = CV
    )
    
+   # Remove the 1-cluster (k = 1) row from the diagnostics table
+   diag_raw <- diag_raw[diag_raw$Clusters != 1, , drop = FALSE]
+   
+   
    # ---- formatted symbol columns ----
    gap_char <- ifelse(is.na(diag_raw$Gap.Stat), NA_character_, sprintf("%.4f", diag_raw$Gap.Stat))
-   for (i in seq_along(k_range)) {
-      k <- k_range[i]
-      if (k >= k_min && k <= k_max) {
-         idx <- match(k, k_seq)
-         if (!is.na(idx) && isTRUE(is_gap_1se[idx]) && !is.na(gap_char[i])) {
-            gap_char[i] <- paste0(gap_char[i], "*")
-         }
-      }
-   }
-   
    sil_char <- ifelse(is.na(diag_raw$Silhouette), NA_character_, sprintf("%.4f", diag_raw$Silhouette))
    
    small_char <- ifelse(is.na(diag_raw$Small.Prop), NA_character_, sprintf("%.4f", diag_raw$Small.Prop))
@@ -326,9 +312,9 @@ easy_km_fit <- function(data,
    
    cv_char <- ifelse(is.na(diag_raw$CV), NA_character_, sprintf("%.3f", diag_raw$CV))
    idx_cv1 <- which(!is.na(diag_raw$CV) & diag_raw$CV < 0.5)
-   cv_char[idx_cv1] <- paste0(cv_char[idx_cv1], " \u2022")
+   cv_char[idx_cv1] <- paste0(cv_char[idx_cv1], " *")
    idx_cv2 <- which(!is.na(diag_raw$CV) & diag_raw$CV >= 0.5 & diag_raw$CV < 1)
-   cv_char[idx_cv2] <- paste0(cv_char[idx_cv2], " \u2022\u2022")
+   cv_char[idx_cv2] <- paste0(cv_char[idx_cv2], " **")
    
    diag_disp <- data.frame(
       Clusters   = diag_raw$Clusters,
@@ -355,11 +341,9 @@ easy_km_fit <- function(data,
    ft <- flextable::add_footer_lines(
       ft,
       values = c(
-         "* 1-SE Gap rule.",
          "^ Smallest cluster < 5% of sample.",
          "\u25CA Largest cluster > 50% of sample.",
-         "\u2022 CV < 0.5 well balanced; \u2022\u2022 moderately imbalanced.",
-         "Silhouette is average silhouette width (higher is better); defined for k >= 2."
+         "* CV < 0.5 well balanced; ** moderately imbalanced."
       )
    )
    
