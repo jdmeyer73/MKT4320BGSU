@@ -12,7 +12,7 @@
 #' \code{\link{easy_hc_final}}.
 #'
 #' Diagnostic outputs include multiple stopping rules (Duda--Hart,
-#' pseudo-\eqn{t^2}, and the Gap statistic using the 1-SE rule) as well as
+#' pseudo-\eqn{t^2}) as well as
 #' cluster-size balance measures. A table of cluster size proportions is also
 #' returned to help assess whether candidate solutions contain very small or
 #' dominant clusters.
@@ -71,7 +71,7 @@
 #' @importFrom stats dist hclust as.dendrogram cutree complete.cases sd
 #' @importFrom dendextend heights_per_k.dendrogram set colored_bars
 #' @importFrom NbClust NbClust
-#' @importFrom cluster clusGap
+#' @importFrom cluster silhouette
 #' @importFrom flextable flextable add_header_lines add_footer_lines
 #' @importFrom flextable align bold colformat_double autofit
 #' @export
@@ -223,35 +223,9 @@ easy_hc_fit <- function(data,
    
    k_seq <- k_min:k_max
    
-   # ---- Gap statistic ----
-   gap_res <- cluster::clusGap(
-      x = as.matrix(data_used),
-      FUNcluster = function(x, k) {
-         d_tmp  <- stats::dist(x, method = dtype) ^ pw
-         hc_tmp <- stats::hclust(d_tmp, method = ltype)
-         list(cluster = stats::cutree(hc_tmp, k = k))
-      },
-      K.max = k_max,
-      B     = 20
-   )
-   
-   gap_tab  <- as.data.frame(gap_res$Tab)
-   rn_k     <- as.numeric(rownames(gap_tab))
-   gap_vals <- gap_tab$gap[match(k_seq, rn_k)]
-   se_vals  <- gap_tab$SE.sim[match(k_seq, rn_k)]
-   
-   # ---- 1-SE Gap rule ----
-   valid_idx  <- which(k_seq >= 2)
-   is_gap_1se <- rep(FALSE, length(k_seq))
-   if (length(valid_idx) > 0) {
-      idx_max <- valid_idx[which.max(gap_vals[valid_idx])]
-      thresh  <- gap_vals[idx_max] - se_vals[idx_max]
-      cand    <- valid_idx[gap_vals[valid_idx] >= thresh]
-      if (length(cand) > 0) is_gap_1se[cand[1]] <- TRUE
-   }
-   
    # ---- cluster size diagnostics ----
    Small.Prop <- Large.Prop <- CV <- numeric(length(k_seq))
+   Silhouette <- rep(NA_real_, length(k_seq))
    
    # ---- cluster size proportions table (by k) ----
    size_prop_mat <- matrix(NA_real_, nrow = length(k_seq), ncol = k_max)
@@ -268,6 +242,11 @@ easy_hc_fit <- function(data,
       Large.Prop[i] <- max(sz) / n_obs
       CV[i] <- if (length(sz) > 1) stats::sd(sz) / mean(sz) else NA_real_
       
+      # Silhouette (avg. silhouette width; undefined for k = 1)
+      if (k_seq[i] >= 2) {
+         Silhouette[i] <- mean(cluster::silhouette(mem, diss)[, 'sil_width'])
+      }
+      
       # NEW: proportions for each cluster (1..k for that solution), stored in fixed-width matrix (1..k_max)
       props <- as.numeric(tab) / sum(tab)
       cl_ids <- as.integer(names(tab))  # should be 1..k
@@ -278,11 +257,14 @@ easy_hc_fit <- function(data,
       Num.Clusters = k_seq,
       Duda.Hart    = as.numeric(nb_duda),
       pseudo.t2    = as.numeric(nb_pseudo),
-      Gap.Stat     = gap_vals,
+      Silhouette   = Silhouette,
       Small.Prop   = Small.Prop,
       Large.Prop   = Large.Prop,
       CV           = CV
    )
+   
+   # remove k = 1 from stop table (silhouette and most stopping rules are not meaningful for k=1)
+   stop_raw <- stop_raw[stop_raw$Num.Clusters >= 2, , drop = FALSE]
    
    size_prop_raw <- data.frame(
       Solution = rownames(size_prop_mat),
@@ -299,10 +281,8 @@ easy_hc_fit <- function(data,
    size_prop_ft <- flextable::colformat_double(size_prop_ft, j = 2:ncol(size_prop_raw), digits = 4)
    size_prop_ft <- flextable::autofit(size_prop_ft)
    
-   
    # ---- formatted symbol columns ----
-   gap_char <- sprintf("%.4f", stop_raw$Gap.Stat)
-   gap_char[is_gap_1se] <- paste0(gap_char[is_gap_1se], "*")
+   sil_char <- ifelse(is.na(stop_raw$Silhouette), "", sprintf("%.4f", stop_raw$Silhouette))
    
    small_char <- sprintf("%.4f", stop_raw$Small.Prop)
    idx_small  <- which(!is.na(stop_raw$Small.Prop) & stop_raw$Small.Prop < 0.05)
@@ -314,15 +294,15 @@ easy_hc_fit <- function(data,
    
    cv_char <- sprintf("%.3f", stop_raw$CV)
    idx_cv1 <- which(!is.na(stop_raw$CV) & stop_raw$CV < 0.5)
-   cv_char[idx_cv1] <- paste0(cv_char[idx_cv1], " \u2022")
+   cv_char[idx_cv1] <- paste0(cv_char[idx_cv1], " *")
    idx_cv2 <- which(!is.na(stop_raw$CV) & stop_raw$CV >= 0.5 & stop_raw$CV < 1)
-   cv_char[idx_cv2] <- paste0(cv_char[idx_cv2], " \u2022\u2022")
+   cv_char[idx_cv2] <- paste0(cv_char[idx_cv2], " **")
    
    stop_disp <- data.frame(
       Clusters   = stop_raw$Num.Clusters,
       Duda.Hart  = stop_raw$Duda.Hart,
       pseudo.t2  = stop_raw$pseudo.t2,
-      Gap.Stat   = gap_char,
+      Silhouette = sil_char,
       Small.Prop = small_char,
       Large.Prop = large_char,
       CV         = cv_char,
@@ -354,10 +334,9 @@ easy_hc_fit <- function(data,
    ft <- flextable::add_footer_lines(
       ft,
       values = c(
-         "* 1-SE Gap rule.",
          "^ Smallest cluster < 5% of sample.",
          "\u25CA Largest cluster > 50% of sample.",
-         "\u2022 CV < 0.5 well balanced; \u2022\u2022 moderately imbalanced."
+         "* CV < 0.5 well balanced; ** moderately imbalanced."
          
       )
    )

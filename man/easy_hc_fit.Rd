@@ -71,7 +71,7 @@ cluster membership can be reattached later using
 \code{\link{easy_hc_final}}.
 
 Diagnostic outputs include multiple stopping rules (Duda--Hart,
-pseudo-\eqn{t^2}, and the Gap statistic using the 1-SE rule) as well as
+pseudo-\eqn{t^2}) as well as
 cluster-size balance measures. A table of cluster size proportions is also
 returned to help assess whether candidate solutions contain very small or
 dominant clusters.
