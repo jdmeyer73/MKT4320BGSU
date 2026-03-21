@@ -6,8 +6,10 @@
 #' @docType data
 #' @format A data frame with 10,000 rows and 12 variables:
 #' \describe{
-#'   \item{renew}{Factor or character. Customer renewed service
+#'   \item{renew_factor}{Factor or character. Customer renewed service
 #'     (\code{Yes}, \code{No}).}
+#'   \item{renew}{Integer. Customer renewed service
+#'     (\code{1 = Yes}, \code{2 = No}).}
 #'   \item{clv}{Numeric. Predicted customer lifetime value (future revenue).}
 #'   \item{promotion}{Factor or character. Received promotion
 #'     (\code{Yes}, \code{No}).}
