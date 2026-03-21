@@ -82,6 +82,7 @@
 #' @importFrom flextable flextable add_header_lines bold align autofit bg
 #' @importFrom scales percent dollar
 #' @export
+#' 
 easy_tgt_teleko <- function(combined,
                             method,
                             cutoff1 = NULL,

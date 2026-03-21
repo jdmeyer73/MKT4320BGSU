@@ -92,6 +92,7 @@
 #' @importFrom flextable flextable add_header_lines bold align autofit bg
 #' @importFrom scales percent dollar
 #' @export
+#' 
 easy_tgt_cov_teleko <- function(combined,
                                 rules,
                                 title = "Targeting Based on Covariate Rules") {
