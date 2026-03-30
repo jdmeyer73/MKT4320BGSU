@@ -4,48 +4,76 @@
 \alias{pp_std_mnl}
 \title{Predicted Probabilities for Standard Multinomial Logit}
 \usage{
-pp_std_mnl(model, focal, xlab = NULL, ft_table = FALSE)
+pp_std_mnl(model, focal, interaction = NULL, xlab = NULL, ft_table = TRUE)
 }
 \arguments{
 \item{model}{A fitted \code{nnet::multinom} model.}
 
-\item{focal}{Character string; name of the focal predictor variable.}
+\item{focal}{Character string giving the name of the focal predictor variable.}
 
-\item{xlab}{Optional character string; label for the x-axis in the plot.}
+\item{interaction}{Optional character string giving the name of a factor
+interaction variable.}
+
+\item{xlab}{Optional character string used as the x-axis label in the plot.
+If omitted, the focal variable name is used.}
 
 \item{ft_table}{Logical; if \code{TRUE}, return the probability table as a
-\code{flextable} (default = \code{FALSE}).}
+\code{flextable}. If \code{FALSE}, return a tibble.}
 }
 \value{
 A list with components:
 \describe{
-\item{table}{Data frame or flextable of predicted probabilities.}
+\item{table}{A tibble or flextable containing predicted probabilities and
+confidence intervals.}
 \item{plot}{A \code{ggplot} object showing predicted probabilities.}
 }
 }
 \description{
 Compute and visualize average predicted probabilities from a fitted
 standard multinomial logit model for a focal predictor variable.
+Optionally, predicted probabilities may also be computed across levels
+of a factor interaction variable.
 }
 \details{
 Predicted probabilities are computed from a fitted
-\code{nnet::multinom} model. For a continuous focal variable, predictions
-are evaluated at representative values (e.g., mean and \eqn{\pm} 1 SD).
-For a factor focal variable, predictions are computed across factor levels.
+\code{nnet::multinom} model using the \code{effects} package.
 
-The function returns both a table of predicted probabilities and a
-corresponding plot for teaching and interpretation.
+For a numeric focal predictor, probabilities are evaluated across the
+observed range of the focal variable to produce a smooth prediction curve.
+A compact summary table is also returned using three representative values:
+mean, one standard deviation below the mean, and one standard deviation
+above the mean.
+
+For a factor focal predictor, probabilities are computed across all levels
+of the factor.
+
+If an interaction variable is supplied, predicted probabilities are
+evaluated across focal values separately for each interaction level.
+Currently, interaction variables must be factors, and interaction mode
+is only supported when the focal predictor is numeric.
+
+Confidence intervals shown in the plot are pointwise confidence intervals
+returned by \code{effects}.
+
+The function returns both a probability table and a corresponding plot
+intended for teaching and interpretation of multinomial logit effects.
 }
 \examples{
 \dontrun{
-model <- nnet::multinom(choice ~ price + promo,
-                         data = mydata,
-                         model = TRUE,
-                         trace = FALSE)
+model <- nnet::multinom(choice ~ price + coupon + price:coupon,
+                        data = mydata,
+                        model = TRUE,
+                        trace = FALSE)
 
-res <- pp_std_mnl(model, focal = "price")
-res$table
-res$plot
+# focal predictor only
+res1 <- pp_std_mnl(model, focal = "price")
+res1$table
+res1$plot
+
+# focal predictor with interaction
+res2 <- pp_std_mnl(model, focal = "price", interaction = "coupon")
+res2$table
+res2$plot
 }
 
 }
