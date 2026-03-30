@@ -5,7 +5,7 @@
 \alias{pb}
 \title{Peanut Butter Sales}
 \format{
-A data frame with 5,000 rows and 10 variables:
+A data frame with 4,000 rows and 10 variables:
 \describe{
 \item{extad}{Factor. "Yes" if brand was featured in external advertising; "No" otherwise.}
 \item{intad}{Factor. "Yes" if brand was featured in in-store advertising; "No" otherwise.}

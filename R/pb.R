@@ -7,7 +7,7 @@
 #' Used for standard multinomial logistic regression.
 #'
 #' @docType data
-#' @format A data frame with 5,000 rows and 10 variables:
+#' @format A data frame with 4,000 rows and 10 variables:
 #' \describe{
 #'   \item{extad}{Factor. "Yes" if brand was featured in external advertising; "No" otherwise.}
 #'   \item{intad}{Factor. "Yes" if brand was featured in in-store advertising; "No" otherwise.}
